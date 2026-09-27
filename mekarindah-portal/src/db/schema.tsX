@@ -8,6 +8,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+/* ---------- Residents & Auth ---------- */
 export type ResidentRole = "resident" | "admin";
 
 export const residents = pgTable("residents", {
@@ -39,7 +40,9 @@ export const sessions = pgTable("sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+cat >> src/db/schema.ts << 'EOF2'
 
+/* ---------- Domain tables ---------- */
 export const invoices = pgTable("invoices", {
   id: text("id").primaryKey(),
   residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
@@ -123,3 +126,4 @@ export const portalStates = pgTable("portal_states", {
 });
 
 void jsonb;
+EOF2

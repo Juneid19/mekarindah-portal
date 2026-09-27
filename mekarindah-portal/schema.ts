@@ -1,3 +1,4 @@
+cat > src/db/schema.ts << 'SCHEMA_EOF'
 import {
   boolean,
   integer,
@@ -8,6 +9,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+/* ---------- Residents & Auth ---------- */
 export type ResidentRole = "resident" | "admin";
 
 export const residents = pgTable("residents", {
@@ -40,6 +42,7 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ---------- Domain tables ---------- */
 export const invoices = pgTable("invoices", {
   id: text("id").primaryKey(),
   residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
@@ -65,7 +68,10 @@ export const documents = pgTable("documents", {
   residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
   submitted: text("submitted").notNull(),
-  status: text("status").$type<"pending" | "processing" | "ready" | "completed">().notNull().default("pending"),
+  status: text("status")
+    .$type<"pending" | "processing" | "ready" | "completed">()
+    .notNull()
+    .default("pending"),
 });
 
 export const complaints = pgTable("complaints", {
@@ -100,12 +106,14 @@ export const sosEvents = pgTable("sos_events", {
   triggeredAt: timestamp("triggered_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ---------- Finance summary (read-only, computed) ---------- */
 export const financeSummary = pgTable("finance_summary", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ---------- Finance transactions (admin CRUD) ---------- */
 export const financeTransactions = pgTable("finance_transactions", {
   id: text("id").primaryKey(),
   type: text("type").$type<"income" | "expense">().notNull(),
@@ -116,6 +124,7 @@ export const financeTransactions = pgTable("finance_transactions", {
   createdBy: text("created_by").notNull().default(""),
 });
 
+/* ---------- Portal demo snapshot (used by public landing) ---------- */
 export const portalStates = pgTable("portal_states", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
@@ -123,3 +132,4 @@ export const portalStates = pgTable("portal_states", {
 });
 
 void jsonb;
+SCHEMA_EOF

@@ -123,3 +123,4 @@ export const portalStates = pgTable("portal_states", {
 });
 
 void jsonb;
+
