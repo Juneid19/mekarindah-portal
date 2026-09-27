@@ -1,0 +1,7 @@
+{"timestamp":"00:00:26.458","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:45.965","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:01:14.155","source":"Server","level":"ERROR","message":"(node:26236) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.\nIn the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.\n\nTo prepare for this change:\n- If you want the current behavior, explicitly use 'sslmode=verify-full'\n- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'\n\nSee https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.\n(Use `node --trace-warnings ...` to show where the warning was created)"}
+{"timestamp":"00:01:26.216","source":"Server","level":"LOG","message":"○ Compiling /dashboard ..."}
+{"timestamp":"00:01:44.908","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:01:48.755","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:02:37.882","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
