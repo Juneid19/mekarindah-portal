@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { PropertyTab, InvoicesTab, FinanceTab, CardsTab, BulkUnitsTab } from "@/components/admin-tabs";
 
 type Role = "resident" | "admin";
 
@@ -24,7 +25,7 @@ type Snapshot = {
   gateOpenedAt: string | null;
 };
 
-type View = "dashboard" | "profile" | "property" | "ipl" | "access" | "finance" | "vehicles" | "documents" | "arrears" | "complaints" | "residents";
+type View = "dashboard" | "profile" | "property" | "ipl" | "access" | "finance" | "vehicles" | "documents" | "arrears" | "complaints" | "residents" | "adminProperty" | "adminIpl" | "adminFinance" | "adminCards" | "adminBulkUnits";
 type Modal = "profile" | "vehicle" | "document" | "complaint" | null;
 
 const rupiah = (n: number) => "Rp" + n.toLocaleString("id-ID");
@@ -48,6 +49,11 @@ const navItems: { id: View; label: string; adminOnly?: boolean }[] = [
   { id: "arrears", label: "Penunggak IPL", adminOnly: true },
   { id: "complaints", label: "Aduan & SOS" },
   { id: "residents", label: "Data Warga", adminOnly: true },
+  { id: "adminProperty", label: "Properti Unit", adminOnly: true },
+  { id: "adminIpl", label: "Buat Tagihan IPL", adminOnly: true },
+  { id: "adminFinance", label: "Kelola Keuangan", adminOnly: true },
+  { id: "adminCards", label: "Kelola Kartu Akses", adminOnly: true },
+  { id: "adminBulkUnits", label: "Generator Unit Massal", adminOnly: true },
 ];
 
 const moduleCards = [
@@ -169,6 +175,11 @@ export default function DashboardClient({ initialUser }: { initialUser: User }) 
             <>
               <p className="dash-nav-label spaced">ADMINISTRATOR</p>
               <button className={`dash-nav-item ${view === "residents" ? "active" : ""}`} onClick={() => go("residents")}>Data Warga</button>
+              <button className={`dash-nav-item ${view === "adminProperty" ? "active" : ""}`} onClick={() => go("adminProperty")}>Properti Unit</button>
+              <button className={`dash-nav-item ${view === "adminIpl" ? "active" : ""}`} onClick={() => go("adminIpl")}>Buat Tagihan IPL</button>
+              <button className={`dash-nav-item ${view === "adminFinance" ? "active" : ""}`} onClick={() => go("adminFinance")}>Kelola Keuangan</button>
+              <button className={`dash-nav-item ${view === "adminCards" ? "active" : ""}`} onClick={() => go("adminCards")}>Kelola Kartu Akses</button>
+              <button className={`dash-nav-item ${view === "adminBulkUnits" ? "active" : ""}`} onClick={() => go("adminBulkUnits")}>Generator Unit</button>
             </>
           )}
         </nav>
@@ -204,6 +215,11 @@ export default function DashboardClient({ initialUser }: { initialUser: User }) 
           {view === "documents" && <DocumentsView data={data} onAdd={() => setModal("document")} onProcess={(id) => apiCall(`/api/documents/${id}/process`, { method: "POST" }, "Status dokumen diperbarui")} />}
           {view === "arrears" && <ArrearsView />}
           {view === "complaints" && <ComplaintsView data={data} onAdd={() => setModal("complaint")} onSos={(kind) => { apiCall("/api/complaints", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind }) }, `SOS ${kind} aktif — petugas keamanan diberi tahu`); triggerSos(kind); }} />}
+          {view === "adminProperty" && initialUser.role === "admin" && <PropertyTab residents={adminResidents} onSaved={fetchAdminResidents} />}
+          {view === "adminIpl" && initialUser.role === "admin" && <InvoicesTab residents={adminResidents} />}
+          {view === "adminFinance" && initialUser.role === "admin" && <FinanceTab />}
+          {view === "adminCards" && initialUser.role === "admin" && <CardsTab residents={adminResidents} />}
+          {view === "adminBulkUnits" && initialUser.role === "admin" && <BulkUnitsTab />}
           {view === "residents" && initialUser.role === "admin" && <ResidentsView residents={adminResidents} onReset={(id, name) => apiCall("/api/admin/residents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }, `Password ${name} direset ke default`)} />}
         </div>
       </main>

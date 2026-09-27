@@ -4,12 +4,10 @@ import {
   jsonb,
   numeric,
   pgTable,
-  primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 
-/* ---------- Residents & Auth ---------- */
 export type ResidentRole = "resident" | "admin";
 
 export const residents = pgTable("residents", {
@@ -23,6 +21,9 @@ export const residents = pgTable("residents", {
   emergencyPhone: text("emergency_phone").notNull().default(""),
   passwordHash: text("password_hash").notNull(),
   role: text("role").$type<ResidentRole>().notNull().default("resident"),
+  landArea: integer("land_area"),
+  buildingArea: integer("building_area"),
+  bedrooms: integer("bedrooms"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -39,13 +40,13 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-/* ---------- Domain tables ---------- */
 export const invoices = pgTable("invoices", {
   id: text("id").primaryKey(),
   residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
   month: text("month").notNull(),
   year: integer("year").notNull(),
   amount: numeric("amount", { precision: 12, scale: 0 }).notNull(),
+  description: text("description").notNull().default("IPL"),
   status: text("status").$type<"paid" | "unpaid">().notNull().default("unpaid"),
   dueDate: text("due_date").notNull(),
 });
@@ -64,10 +65,7 @@ export const documents = pgTable("documents", {
   residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
   submitted: text("submitted").notNull(),
-  status: text("status")
-    .$type<"pending" | "processing" | "ready" | "completed">()
-    .notNull()
-    .default("pending"),
+  status: text("status").$type<"pending" | "processing" | "ready" | "completed">().notNull().default("pending"),
 });
 
 export const complaints = pgTable("complaints", {
@@ -102,19 +100,26 @@ export const sosEvents = pgTable("sos_events", {
   triggeredAt: timestamp("triggered_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-/* ---------- Finance summary (read-only, computed) ---------- */
 export const financeSummary = pgTable("finance_summary", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-/* ---------- Portal demo snapshot (used by public landing) ---------- */
+export const financeTransactions = pgTable("finance_transactions", {
+  id: text("id").primaryKey(),
+  type: text("type").$type<"income" | "expense">().notNull(),
+  category: text("category").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 0 }).notNull(),
+  description: text("description").notNull().default(""),
+  date: timestamp("date", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").notNull().default(""),
+});
+
 export const portalStates = pgTable("portal_states", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Touch the jsonb import so it is not tree-shaken if we add typed json columns later.
 void jsonb;
