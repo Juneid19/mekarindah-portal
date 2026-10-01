@@ -7,7 +7,7 @@ import { PropertyTab, InvoicesTab, FinanceTab, CardsTab, BulkUnitsTab } from "@/
 type Role = "resident" | "admin";
 
 type User = { id: string; name: string; email: string; unit: string; role: Role };
-type Profile = User & { phone: string; block: string; emergencyName: string; emergencyPhone: string };
+type Profile = User & { phone: string; block: string; emergencyName: string; emergencyPhone: string; photoUrl: string };
 type Invoice = { id: string; month: string; year: number; amount: number; status: "paid" | "unpaid"; dueDate: string };
 type Vehicle = { id: string; plate: string; type: "Mobil" | "Motor"; brand: string; color: string };
 type DocumentItem = { id: string; type: string; submitted: string; status: "pending" | "processing" | "ready" | "completed" };
@@ -283,6 +283,7 @@ function Modal({ type, data, editingVehicle, onClose, onSubmit }: { type: NonNul
         <form onSubmit={handle}>
           {type === "profile" && (
             <>
+              <Field label="URL Foto Profil" name="photoUrl" type="url" placeholder="https://example.com/foto.jpg" defaultValue={data.profile.photoUrl} />
               <Field label="Nama lengkap" name="name" defaultValue={data.profile.name} />
               <Field label="Nomor telepon" name="phone" defaultValue={data.profile.phone} />
               <div className="dash-divider">Kontak darurat</div>
@@ -393,7 +394,7 @@ function ProfileView({ data, onEdit }: { data: Snapshot; onEdit: () => void }) {
       <PageTitle title="Profil Saya" subtitle="Kelola informasi pribadi dan kontak Anda" action={<button className="dash-btn-primary" onClick={onEdit}>✎ Edit profil</button>} />
       <div className="dash-two-col">
         <section className="dash-panel profile-card">
-          <div className="dash-big-avatar">{initials(data.profile.name)}</div>
+          {data.profile.photoUrl ? <img src={data.profile.photoUrl} alt={data.profile.name} className="dash-big-avatar" style={{ objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <div className="dash-big-avatar">{initials(data.profile.name)}</div>}
           <h2>{data.profile.name}</h2>
           <p>{data.profile.role === "admin" ? "Administrator" : "Penghuni tetap"}</p>
           <span className="dash-pill">UNIT {data.profile.unit}</span>

@@ -152,7 +152,7 @@ export default function PortalApp() {
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
-        <div className="brand"><div className="brand-mark"><Building2 size={24} /></div><div><strong>MEKARINDAH</strong><span>PORTAL WARGA</span></div></div>
+        <div className="brand"><img src="https://res.cloudinary.com/ddngqwcz/image/upload/v1786758568/logo.jpg" alt="Logo RW Mekarindah" style={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderRadius: "50%", objectFit: "cover", border: "2px solid #cbd5e1", display: "inline-block", flexShrink: 0 }} /><div><strong>MEKARINDAH</strong><span>PORTAL WARGA</span></div></div>
         <button className="close-sidebar" onClick={() => setMobileOpen(false)}><X size={22} /></button>
         <nav>
           <p className="nav-label">MENU UTAMA</p>

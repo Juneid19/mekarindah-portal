@@ -36,6 +36,7 @@ export async function GET() {
       emergencyName: profile?.emergencyName,
       emergencyPhone: profile?.emergencyPhone,
       role: profile?.role,
+      photoUrl: profile?.photoUrl,
     },
     invoices: userInvoices.map((i) => ({ id: i.id, month: i.month, year: i.year, amount: Number(i.amount), status: i.status, dueDate: i.dueDate })),
     vehicles: userVehicles.map((v) => ({ id: v.id, plate: v.plate, type: v.type, brand: v.brand, color: v.color })),

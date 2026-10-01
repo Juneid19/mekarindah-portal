@@ -1,7 +1,41 @@
-{"timestamp":"00:00:26.458","source":"Server","level":"LOG","message":""}
-{"timestamp":"00:00:45.965","source":"Server","level":"LOG","message":"○ Compiling / ..."}
-{"timestamp":"00:01:14.155","source":"Server","level":"ERROR","message":"(node:26236) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.\nIn the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.\n\nTo prepare for this change:\n- If you want the current behavior, explicitly use 'sslmode=verify-full'\n- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'\n\nSee https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.\n(Use `node --trace-warnings ...` to show where the warning was created)"}
-{"timestamp":"00:01:26.216","source":"Server","level":"LOG","message":"○ Compiling /dashboard ..."}
-{"timestamp":"00:01:44.908","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
-{"timestamp":"00:01:48.755","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
-{"timestamp":"00:02:37.882","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:00:27.246","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:30.695","source":"Server","level":"LOG","message":"○ Compiling /dashboard ..."}
+{"timestamp":"00:00:59.044","source":"Server","level":"ERROR","message":"(node:23483) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.\nIn the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.\n\nTo prepare for this change:\n- If you want the current behavior, explicitly use 'sslmode=verify-full'\n- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'\n\nSee https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.\n(Use `node --trace-warnings ...` to show where the warning was created)"}
+{"timestamp":"00:01:02.926","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:01:22.793","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:01:26.342","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:03:27.813","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:04:00.665","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:04:21.084","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:04:43.298","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:05:15.973","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:07:07.771","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:07:44.884","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:10:26.225","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:11:10.415","source":"Server","level":"LOG","message":"○ Compiling /api/auth/logout ..."}
+{"timestamp":"00:11:18.328","source":"Server","level":"LOG","message":"○ Compiling /login ..."}
+{"timestamp":"00:11:32.123","source":"Server","level":"LOG","message":"○ Compiling /api/auth/login ..."}
+{"timestamp":"00:11:42.039","source":"Server","level":"LOG","message":"○ Compiling /api/data ..."}
+{"timestamp":"00:13:41.418","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:14:56.733","source":"Server","level":"LOG","message":"○ Compiling /api/admin/invoices ..."}
+{"timestamp":"00:18:02.557","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:18:06.313","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:18:24.790","source":"Server","level":"LOG","message":"○ Compiling /api/auth/logout ..."}
+{"timestamp":"00:18:35.421","source":"Server","level":"LOG","message":"○ Compiling /api/auth/login ..."}
+{"timestamp":"00:18:54.715","source":"Server","level":"LOG","message":"○ Compiling /api/profile ..."}
+{"timestamp":"00:23:31.215","source":"Server","level":"LOG","message":"○ Compiling / ..."}
+{"timestamp":"00:23:42.509","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:24:07.182","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:24:53.777","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:24:59.100","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:25:04.309","source":"Server","level":"LOG","message":"○ Compiling /api/auth/login ..."}
+{"timestamp":"00:25:34.127","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:26:40.289","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:34:20.689","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:34:24.088","source":"Server","level":"LOG","message":"○ Compiling /api/admin/residents ..."}
+{"timestamp":"00:34:39.144","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:34:58.565","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:35:09.996","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:35:51.019","source":"Server","level":"LOG","message":"○ Compiling /api/admin/property/[unit] ..."}
+{"timestamp":"00:40:10.368","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:40:10.539","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}

@@ -24,6 +24,7 @@ export const residents = pgTable("residents", {
   landArea: integer("land_area"),
   buildingArea: integer("building_area"),
   bedrooms: integer("bedrooms"),
+  photoUrl: text("photo_url").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
