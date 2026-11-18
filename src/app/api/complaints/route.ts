@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { complaints } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -17,7 +17,6 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Urutkan berdasarkan ID (id menggunakan timestamp sehingga urut dari yang terbaru)
     const allComplaints = await db
       .select()
       .from(complaints)
@@ -41,30 +40,49 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     const body = await request.json().catch(() => ({}));
 
-    const detail = body.detail || body.message || body.description || "Laporan Baru";
+    const detailText = body.detail || body.message || body.description || "Laporan Baru";
+    const isSOS =
+      detailText.toUpperCase().includes("SOS") ||
+      detailText.toUpperCase().includes("DARURAT") ||
+      body.category === "Darurat";
+
     const residentId = user?.id || body.residentId || "warga-1";
     const residentName = user?.name || body.residentName || "Warga Mekarindah";
     const unit = user?.unit || body.unit || "-";
 
     const id = `cmp-${Date.now()}`;
+    const title = body.title || (isSOS ? "PANGGILAN DARURAT (SOS)" : "Aduan Warga");
+    const category = body.category || (isSOS ? "Darurat" : "Fasilitas");
+    const date =
+      body.date ||
+      new Date().toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    const status = body.status || "Diterima";
 
-    // 1. Simpan ke database Neon
+    // 1. Simpan ke database Neon (Lengkap semua kolom wajib)
     await db.insert(complaints).values({
       id,
       residentId,
-      detail,
-      status: "Diterima",
+      title,
+      category,
+      detail: detailText,
+      date,
+      status,
     });
 
     // 2. Kirim Notifikasi ke Grup Telegram Sekuriti
-    const isSOS = detail.toUpperCase().includes("SOS") || detail.toUpperCase().includes("DARURAT");
     const message = `
 ${isSOS ? "🚨 <b>PANGGILAN DARURAT (SOS)</b> 🚨" : "📢 <b>ADUAN WARGA BARU</b>"}
 ━━━━━━━━━━━━━━━━━━━━
 👤 <b>Pelapor:</b> ${residentName}
 🏠 <b>Unit:</b> ${unit}
-📝 <b>Laporan:</b> ${detail}
-📅 <b>Waktu:</b> ${new Date().toLocaleString("id-ID")}
+📌 <b>Judul:</b> ${title}
+📂 <b>Kategori:</b> ${category}
+📝 <b>Rincian:</b> ${detailText}
+📅 <b>Waktu:</b> ${date}
 ━━━━━━━━━━━━━━━━━━━━
 <i>Segera tindak lanjuti oleh Petugas Keamanan / RT</i>
     `.trim();
@@ -83,7 +101,7 @@ ${isSOS ? "🚨 <b>PANGGILAN DARURAT (SOS)</b> 🚨" : "📢 <b>ADUAN WARGA BARU
         }
       );
     } catch (teleErr) {
-      console.error("Gagal kirim notif Telegram aduan:", teleErr);
+      console.error("Gagal kirim notif Telegram:", teleErr);
     }
 
     return NextResponse.json({ success: true, id });
