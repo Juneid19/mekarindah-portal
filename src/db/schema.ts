@@ -72,13 +72,14 @@ export const gateEvents = pgTable("gate_events", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 7. TABEL INVOICES ---
+//// --- 7. TABEL INVOICES (Tagihan IPL) ---
 export const invoices = pgTable("invoices", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(), // Menggunakan text string ID
   residentId: text("resident_id").references(() => residents.id),
   month: text("month").notNull(),
   year: text("year").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  description: text("description"),
   status: text("status").default("unpaid"),
   dueDate: date("due_date"),
   paidAt: timestamp("paid_at"),
