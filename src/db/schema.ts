@@ -10,7 +10,7 @@ import {
   jsonb 
 } from "drizzle-orm/pg-core";
 
-// --- 1. TABEL RESIDENTS (ID adalah TEXT, contoh: 'res-admin') ---
+// --- 1. TABEL RESIDENTS (Warga & Admin) ---
 export const residents = pgTable("residents", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -25,14 +25,14 @@ export const residents = pgTable("residents", {
 
 export const users = residents;
 
-// --- 2. TABEL SESSIONS (Primary key langsung 'token', tanpa kolom 'id') ---
+// --- 2. TABEL SESSIONS ---
 export const sessions = pgTable("sessions", {
   token: text("token").primaryKey(),
   residentId: text("resident_id").references(() => residents.id).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 });
 
-// --- 3. TABEL COMPLAINTS ---
+// --- 3. TABEL COMPLAINTS (Aduan & SOS) ---
 export const complaints = pgTable("complaints", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -43,16 +43,16 @@ export const complaints = pgTable("complaints", {
   status: text("status").default("pending"),
 });
 
-// --- 4. TABEL DOCUMENTS ---
+// --- 4. TABEL DOCUMENTS (Permohonan Surat) ---
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
   type: text("type").notNull(),
   status: text("status").default("pending"),
-  submitted: text("submitted"), // Menggunakan 'submitted' sesuai database Neon
+  submitted: text("submitted"),
 });
 
-// --- 5. TABEL ACCESS CARDS ---
+// --- 5. TABEL ACCESS CARDS (Kartu RFID) ---
 export const accessCards = pgTable("access_cards", {
   id: text("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -61,7 +61,18 @@ export const accessCards = pgTable("access_cards", {
   active: boolean("active").default(true),
 });
 
-// --- 6. TABEL INVOICES ---
+// --- 6. TABEL GATE EVENTS (Riwayat Buka Gate / Akses) ---
+export const gateEvents = pgTable("gate_events", {
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
+  direction: text("direction").default("in"), // 'in' atau 'out'
+  method: text("method").default("remote"), // 'rfid', 'remote', 'qr'
+  note: text("note"),
+  timestamp: timestamp("timestamp").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// --- 7. TABEL INVOICES (Tagihan IPL) ---
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -76,7 +87,7 @@ export const invoices = pgTable("invoices", {
 
 export const iplBills = invoices;
 
-// --- 7. TABEL SECURITY CODES ---
+// --- 8. TABEL SECURITY CODES ---
 export const securityCodes = pgTable("security_codes", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -86,7 +97,7 @@ export const securityCodes = pgTable("security_codes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 8. TABEL VEHICLES ---
+// --- 9. TABEL VEHICLES ---
 export const vehicles = pgTable("vehicles", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -96,7 +107,7 @@ export const vehicles = pgTable("vehicles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 9. TABEL FINANCE TRANSACTIONS ---
+// --- 10. TABEL FINANCE TRANSACTIONS ---
 export const financeTransactions = pgTable("finance_transactions", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(),
@@ -107,7 +118,7 @@ export const financeTransactions = pgTable("finance_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 10. TABEL FINANCE SUMMARY ---
+// --- 11. TABEL FINANCE SUMMARY ---
 export const financeSummary = pgTable("finance_summary", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
