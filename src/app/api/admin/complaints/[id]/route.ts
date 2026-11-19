@@ -1,10 +1,8 @@
-
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { complaints } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 
 export async function PUT(
@@ -12,34 +10,30 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 1. Pastikan hanya admin yang bisa mengubah status aduan
     await requireAdmin();
+
     const { id } = await params;
     const body = await request.json();
+    const { status } = body;
 
-    // Pastikan status dicast ke tipe yang diizinkan schema
-    const validStatus = body.status as "Diterima" | "Diproses" | "Selesai";
+    if (!status) {
+      return NextResponse.json({ message: "Status wajib diisi" }, { status: 400 });
+    }
 
+    // 2. Update status aduan di database Neon
+    // Kita gunakan Number(id) karena id di schema adalah serial (number)
     await db
       .update(complaints)
-      .set({ status: validStatus })
-      .where(eq(complaints.id, Number(id))); // ID adalah string, jangan di-parseInt
+      .set({ status: status })
+      .where(eq(complaints.id, Number(id)));
 
-    return NextResponse.json({ ok: true, status: validStatus });
+    return NextResponse.json({ ok: true, status });
   } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await requireAdmin();
-    const { id } = await params;
-    await db.delete(complaints).where(eq(complaints.id, id));
-    return NextResponse.json({ ok: true });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("Gagal update aduan:", error);
+    return NextResponse.json(
+      { message: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
