@@ -15,12 +15,15 @@ export const residents = pgTable("residents", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"),
   phone: text("phone"),
-  unit: text("unit"),
-  block: text("block"),
-  role: text("role").default("resident"),
-  createdAt: timestamp("created_at").defaultNow(),
+  unit: text("unit").notNull(),
+  block: text("block").notNull(),
+  role: text("role").$type<ResidentRole>().default("resident").notNull(),
+  emergencyName: text("emergency_name"),
+  emergencyPhone: text("emergency_phone"),
+  avatar: text("avatar"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const users = residents;
