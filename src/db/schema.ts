@@ -101,13 +101,14 @@ export const securityCodes = pgTable("security_codes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 9. TABEL VEHICLES ---
+// --- 9. TABEL VEHICLES (Kendaraan Warga) ---
 export const vehicles = pgTable("vehicles", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
-  plateNumber: text("plate_number").notNull(),
+  plate: text("plate").notNull(), // Sesuai dengan kode rute kendaraan
   type: text("type").default("Mobil"),
   brand: text("brand"),
+  color: text("color"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
