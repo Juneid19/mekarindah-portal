@@ -23,6 +23,6 @@ export async function POST(_request: Request, ctx: Ctx) {
   if (!existing) return NextResponse.json({ message: "Not found" }, { status: 404 });
   const next = nextStatus[existing.status];
   if (!next) return NextResponse.json({ message: "Sudah selesai" }, { status: 400 });
-  await db.update(documents).set({ status: next }).where(eq(documents.id, id));
+  await db.update(documents).set({ status: next }).where(eq(documents.id, Number(id)));
   return NextResponse.json({ ok: true, status: next });
 }
