@@ -10,7 +10,7 @@ import {
   jsonb 
 } from "drizzle-orm/pg-core";
 
-// --- 1. TABEL RESIDENTS (Warga & Admin) ---
+// --- 1. TABEL RESIDENTS ---
 export const residents = pgTable("residents", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -32,7 +32,7 @@ export const sessions = pgTable("sessions", {
   expiresAt: timestamp("expires_at").notNull(),
 });
 
-// --- 3. TABEL COMPLAINTS (Aduan & SOS) ---
+// --- 3. TABEL COMPLAINTS ---
 export const complaints = pgTable("complaints", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -43,7 +43,7 @@ export const complaints = pgTable("complaints", {
   status: text("status").default("pending"),
 });
 
-// --- 4. TABEL DOCUMENTS (Permohonan Surat) ---
+// --- 4. TABEL DOCUMENTS ---
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -52,7 +52,7 @@ export const documents = pgTable("documents", {
   submitted: text("submitted"),
 });
 
-// --- 5. TABEL ACCESS CARDS (Kartu RFID) ---
+// --- 5. TABEL ACCESS CARDS ---
 export const accessCards = pgTable("access_cards", {
   id: text("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
@@ -61,18 +61,18 @@ export const accessCards = pgTable("access_cards", {
   active: boolean("active").default(true),
 });
 
-// --- 6. TABEL GATE EVENTS (Riwayat Buka Gate / Akses) ---
+// --- 6. TABEL GATE EVENTS (ID adalah TEXT) ---
 export const gateEvents = pgTable("gate_events", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(), // Menggunakan text agar cocok dengan `gate-${Date.now()}`
   residentId: text("resident_id").references(() => residents.id),
-  direction: text("direction").default("in"), // 'in' atau 'out'
-  method: text("method").default("remote"), // 'rfid', 'remote', 'qr'
+  direction: text("direction").default("in"),
+  method: text("method").default("remote"),
   note: text("note"),
   timestamp: timestamp("timestamp").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// --- 7. TABEL INVOICES (Tagihan IPL) ---
+// --- 7. TABEL INVOICES ---
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
