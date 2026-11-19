@@ -15,7 +15,7 @@ export const residents = pgTable("residents", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash"),
+  passwordHash: text("password_hash").notNull(),
   phone: text("phone"),
   unit: text("unit").notNull(),
   block: text("block").notNull(),
