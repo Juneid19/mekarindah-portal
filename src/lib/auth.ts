@@ -8,7 +8,7 @@ export const SESSION_COOKIE = "mekarindah_session";
 const SESSION_DAYS = 14;
 
 export type SessionUser = {
-  id: number | string;
+  id: string; // Pastikan string murni, bukan number
   name: string;
   email: string;
   unit: string;
@@ -79,14 +79,15 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     if (userRows.length === 0) return null;
 
     const user = userRows[0];
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      unit: user.unit || "",
-      phone: user.phone || "",
-      role: (user.role as ResidentRole) || "resident",
-    };
+  return {
+  id: String(user.id),
+  name: user.name,
+  email: user.email,
+  unit: user.unit || "",
+  phone: user.phone || "",
+  role: (user.role as ResidentRole) || "resident",
+};
+
   } catch (error) {
     console.error("Gagal mendapatkan sesi user:", error);
     return null;

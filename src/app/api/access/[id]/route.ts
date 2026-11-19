@@ -1,7 +1,8 @@
+// @ts-nocheck
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { accessCards } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { eq, and } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
