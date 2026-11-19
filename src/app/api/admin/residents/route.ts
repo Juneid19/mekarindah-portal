@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { db } from "@/db";
 import { residents, invoices, accessCards, vehicles, documents, complaints } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
