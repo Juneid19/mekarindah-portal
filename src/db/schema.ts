@@ -88,12 +88,13 @@ export const invoices = pgTable("invoices", {
 
 export const iplBills = invoices;
 
-// --- 8. TABEL SECURITY CODES (Kode Tamu / Gate Pass) ---
+// --- 8. TABEL SECURITY CODES (Kode Tamu / Registrasi Warga) ---
 export const securityCodes = pgTable("security_codes", {
   id: serial("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
-  unit: text("unit"), // <--- Tambahkan kolom ini
+  unit: text("unit"),
   code: text("code").notNull(),
+  assignedTo: text("assigned_to"), // <--- Tambahkan kolom ini
   validUntil: timestamp("valid_until"),
   status: text("status").default("active"),
   createdAt: timestamp("created_at").defaultNow(),

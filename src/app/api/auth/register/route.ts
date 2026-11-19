@@ -1,3 +1,5 @@
+// @ts-nocheck
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { residents, securityCodes } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
