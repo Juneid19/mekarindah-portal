@@ -1,19 +1,12 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "./schema";
 
-// Ambil URL database dari berbagai kemungkinan nama variabel
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL_NON_POOLING ||
-  "";
-
-if (!databaseUrl) {
-  console.warn("⚠️ PERINGATAN: DATABASE_URL belum terdeteksi di environment variables!");
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL tidak ditemukan di file .env");
 }
 
-// Gunakan connection string atau dummy fallback agar tidak crash saat kompilasi awal
-const sql = neon(databaseUrl || "postgresql://placeholder:placeholder@localhost/placeholder");
+const sql = neon(process.env.DATABASE_URL);
 
-// Export WAJIB di baris paling luar (top-level)
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema });
+export * from "./schema"; // Pastikan baris ini ada agar semua tabel dapat diimpor langsung

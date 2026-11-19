@@ -1,126 +1,117 @@
-import {
-  boolean,
-  integer,
-  jsonb,
-  numeric,
-  pgTable,
-  text,
-  timestamp,
+import { 
+  pgTable, 
+  serial, 
+  text, 
+  integer, 
+  timestamp, 
+  date, 
+  numeric, 
+  boolean, 
+  jsonb 
 } from "drizzle-orm/pg-core";
 
-export type ResidentRole = "resident" | "admin";
-
+// --- 1. TABEL RESIDENTS (ID adalah TEXT, contoh: 'res-admin') ---
 export const residents = pgTable("residents", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  phone: text("phone").notNull().default(""),
-  unit: text("unit").notNull().unique(),
-  block: text("block").notNull(),
-  emergencyName: text("emergency_name").notNull().default(""),
-  emergencyPhone: text("emergency_phone").notNull().default(""),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").$type<ResidentRole>().notNull().default("resident"),
-  landArea: integer("land_area"),
-  buildingArea: integer("building_area"),
-  bedrooms: integer("bedrooms"),
-  photoUrl: text("photo_url").notNull().default(""),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  phone: text("phone"),
+  unit: text("unit"),
+  block: text("block"),
+  role: text("role").default("resident"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const securityCodes = pgTable("security_codes", {
-  unit: text("unit").primaryKey(),
-  code: text("code").notNull(),
-  assignedTo: text("assigned_to"),
-});
+export const users = residents;
 
+// --- 2. TABEL SESSIONS (Primary key langsung 'token', tanpa kolom 'id') ---
 export const sessions = pgTable("sessions", {
   token: text("token").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  residentId: text("resident_id").references(() => residents.id).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 });
 
-export const invoices = pgTable("invoices", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  month: text("month").notNull(),
-  year: integer("year").notNull(),
-  amount: numeric("amount", { precision: 12, scale: 0 }).notNull(),
-  description: text("description").notNull().default("IPL"),
-  status: text("status").$type<"paid" | "unpaid">().notNull().default("unpaid"),
-  dueDate: text("due_date").notNull(),
-});
-
-export const vehicles = pgTable("vehicles", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  plate: text("plate").notNull(),
-  type: text("type").$type<"Mobil" | "Motor">().notNull(),
-  brand: text("brand").notNull().default(""),
-  color: text("color").notNull().default(""),
-});
-
-export const documents = pgTable("documents", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  type: text("type").notNull(),
-  submitted: text("submitted").notNull(),
-  status: text("status").$type<"pending" | "processing" | "ready" | "completed">().notNull().default("pending"),
-});
-
+// --- 3. TABEL COMPLAINTS ---
 export const complaints = pgTable("complaints", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  category: text("category").notNull(),
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
   title: text("title").notNull(),
-  detail: text("detail").notNull().default(""),
-  date: text("date").notNull(),
-  status: text("status").$type<"Diterima" | "Diproses" | "Selesai">().notNull().default("Diterima"),
+  category: text("category").notNull(),
+  detail: text("detail").notNull(),
+  date: date("date").notNull(),
+  status: text("status").default("pending"),
 });
 
+// --- 4. TABEL DOCUMENTS ---
+export const documents = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
+  type: text("type").notNull(),
+  status: text("status").default("pending"),
+  submitted: text("submitted"), // Menggunakan 'submitted' sesuai database Neon
+});
+
+// --- 5. TABEL ACCESS CARDS ---
 export const accessCards = pgTable("access_cards", {
   id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
+  residentId: text("resident_id").references(() => residents.id),
   label: text("label").notNull(),
   number: text("number").notNull(),
-  holder: text("holder").notNull().default(""),
-  active: boolean("active").notNull().default(true),
+  active: boolean("active").default(true),
 });
 
-export const gateEvents = pgTable("gate_events", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  triggeredAt: timestamp("triggered_at", { withTimezone: true }).defaultNow().notNull(),
+// --- 6. TABEL INVOICES ---
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
+  month: text("month").notNull(),
+  year: text("year").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  status: text("status").default("unpaid"),
+  dueDate: date("due_date"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const sosEvents = pgTable("sos_events", {
-  id: text("id").primaryKey(),
-  residentId: text("resident_id").notNull().references(() => residents.id, { onDelete: "cascade" }),
-  kind: text("kind").notNull(),
-  triggeredAt: timestamp("triggered_at", { withTimezone: true }).defaultNow().notNull(),
+export const iplBills = invoices;
+
+// --- 7. TABEL SECURITY CODES ---
+export const securityCodes = pgTable("security_codes", {
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
+  code: text("code").notNull(),
+  validUntil: timestamp("valid_until"),
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
+// --- 8. TABEL VEHICLES ---
+export const vehicles = pgTable("vehicles", {
+  id: serial("id").primaryKey(),
+  residentId: text("resident_id").references(() => residents.id),
+  plateNumber: text("plate_number").notNull(),
+  type: text("type").default("Mobil"),
+  brand: text("brand"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// --- 9. TABEL FINANCE TRANSACTIONS ---
+export const financeTransactions = pgTable("finance_transactions", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(),
+  category: text("category").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  description: text("description"),
+  date: date("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// --- 10. TABEL FINANCE SUMMARY ---
 export const financeSummary = pgTable("finance_summary", {
   id: text("id").primaryKey(),
   data: jsonb("data").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const financeTransactions = pgTable("finance_transactions", {
-  id: text("id").primaryKey(),
-  type: text("type").$type<"income" | "expense">().notNull(),
-  category: text("category").notNull(),
-  amount: numeric("amount", { precision: 12, scale: 0 }).notNull(),
-  description: text("description").notNull().default(""),
-  date: timestamp("date", { withTimezone: true }).defaultNow().notNull(),
-  createdBy: text("created_by").notNull().default(""),
-});
-
-export const portalStates = pgTable("portal_states", {
-  id: text("id").primaryKey(),
-  data: jsonb("data").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
-
-void jsonb;
+export type ResidentRole = "admin" | "resident";

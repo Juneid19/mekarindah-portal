@@ -1,17 +1,18 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { db } from "@/db";
-import { sessions, type ResidentRole } from "@/db/schema";
+import { sessions, residents, type ResidentRole } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export const SESSION_COOKIE = "mekarindah_session";
 const SESSION_DAYS = 14;
 
 export type SessionUser = {
-  id: string;
+  id: number | string;
   name: string;
   email: string;
   unit: string;
+  phone?: string;
   role: ResidentRole;
 };
 
@@ -30,48 +31,66 @@ export function verifyPassword(plain: string, stored: string): boolean {
   return timingSafeEqual(derived, expectedBuf);
 }
 
-export function createSession(residentId: string) {
+export function createSession(residentId: number | string) {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   return { token, expiresAt };
 }
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return null;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    if (!token) return null;
 
-  const rows = await db
-    .select({
-      token: sessions.token,
-      expiresAt: sessions.expiresAt,
-      residentId: sessions.residentId,
-      name: sessions.residentId,
-    })
-    .from(sessions)
-    .where(eq(sessions.token, token))
-    .limit(1);
+    // 1. Ambil sesi berdasarkan token
+    const sessionRows = await db
+      .select({
+        token: sessions.token,
+        expiresAt: sessions.expiresAt,
+        residentId: sessions.residentId,
+      })
+      .from(sessions)
+      .where(eq(sessions.token, token))
+      .limit(1);
 
-  if (rows.length === 0) return null;
-  const row = rows[0];
-  if (row.expiresAt.getTime() < Date.now()) {
-    await db.delete(sessions).where(eq(sessions.token, token));
+    if (sessionRows.length === 0) return null;
+    
+    const session = sessionRows[0];
+    if (session.expiresAt.getTime() < Date.now()) {
+      await db.delete(sessions).where(eq(sessions.token, token));
+      return null;
+    }
+
+    // 2. Ambil data warga dari tabel residents
+    const userRows = await db
+      .select({
+        id: residents.id,
+        name: residents.name,
+        email: residents.email,
+        unit: residents.unit,
+        phone: residents.phone,
+        role: residents.role,
+      })
+      .from(residents)
+      .where(eq(residents.id, session.residentId))
+      .limit(1);
+
+    if (userRows.length === 0) return null;
+
+    const user = userRows[0];
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      unit: user.unit || "",
+      phone: user.phone || "",
+      role: (user.role as ResidentRole) || "resident",
+    };
+  } catch (error) {
+    console.error("Gagal mendapatkan sesi user:", error);
     return null;
   }
-
-  const { residents } = await import("@/db/schema");
-  const userRows = await db
-    .select({
-      id: residents.id,
-      name: residents.name,
-      email: residents.email,
-      unit: residents.unit,
-      role: residents.role,
-    })
-    .from(residents)
-    .where(eq(residents.id, row.residentId))
-    .limit(1);
-
-  return userRows[0] ?? null;
 }
 
 export async function requireUser(): Promise<SessionUser> {

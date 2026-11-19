@@ -12,6 +12,9 @@ import {
 export function PortalApp({ initialUser }: { initialUser?: any }) {
   const [activeTab, setActiveTab] = useState("beranda");
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+const [kasList, setKasList] = useState([]);
+const [totalKas, setTotalKas] = useState(0);
+const [iplData, setIplData] = useState([]);
 
   // 1. STATE FORM PROFIL
   const [profile, setProfile] = useState({
@@ -63,6 +66,40 @@ export function PortalApp({ initialUser }: { initialUser?: any }) {
       })
       .catch((err) => console.error("Gagal muat kas RW:", err));
   }, []);
+
+  useEffect(() => {
+  async function ambilDataKasDanIpl() {
+    try {
+      // 1. Ambil data Kas Keuangan RW dari DB Neon
+      const resKas = await fetch("/api/admin/finance");
+      if (resKas.ok) {
+        const dataKas = await resKas.json();
+        setKasList(dataKas);
+
+        // Hitung saldo otomatis: Pemasukan - Pengeluaran
+        const saldo = dataKas.reduce((acc: number, item: any) => {
+          return item.type === "income"
+            ? acc + parseFloat(item.amount)
+            : acc - parseFloat(item.amount);
+        }, 0);
+        setTotalKas(saldo);
+      }
+
+      // 2. Ambil data Tagihan IPL milik warga yang sedang login
+      if (initialUser?.id) {
+        const resIpl = await fetch(`/api/admin/ipl?userId=${initialUser.id}`);
+        if (resIpl.ok) {
+          const dataIpl = await resIpl.json();
+          setIplData(dataIpl);
+        }
+      }
+    } catch (error) {
+      console.error("Gagal sinkron data Kas & IPL:", error);
+    }
+  }
+
+  ambilDataKasDanIpl();
+}, [initialUser?.id]);
 
   // 4. STATE PERMINTAAN DOKUMEN
   const [documents, setDocuments] = useState<any[]>([
@@ -150,28 +187,37 @@ export function PortalApp({ initialUser }: { initialUser?: any }) {
     }, 1000);
   };
 
-  // Kirim SOS Darurat (Kirim ke Telegram)
+ // Kirim SOS Darurat (Kirim ke Database & Telegram)
   const handleSOS = async () => {
     if (!window.confirm("KIRIM SINYAL SOS DARURAT KE REGU KEAMANAN & SATPAM?")) return;
     setSosActive(true);
     try {
-      await fetch("/api/complaints", {
+      const res = await fetch("/api/complaints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          detail: `🚨 [DARURAT SOS] Warga ${profile.name} (Unit ${profile.unit}) MEMINTA BANTUAN SEGERA!`,
+          residentId: profile?.id || initialUser?.id || 1,
+          title: "🚨 DARURAT SOS",
           category: "Keamanan",
+          detail: `🚨 [DARURAT SOS] Warga ${profile.name} (Unit ${profile.unit}) MEMINTA BANTUAN SEGERA!`,
           residentName: profile.name,
           unit: profile.unit,
           phone: profile.phone,
         }),
       });
-      fetchComplaints();
+
+      if (res.ok) {
+        alert("Sinyal SOS DARURAT berhasil dikirim ke Satpam & Telegram!");
+      }
+      await fetchComplaints();
     } catch (e) {
       console.error(e);
+      alert("Gagal mengirim sinyal SOS.");
+    } finally {
+      setSosActive(false);
     }
   };
-
+  
   // Simpan Form Profil
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,13 +305,16 @@ export function PortalApp({ initialUser }: { initialUser?: any }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          detail: `[${newCategory}] ${newDetail.trim()}`,
+          residentId: profile?.id || initialUser?.id || 1,
+          title: `Aduan ${newCategory}`,
           category: newCategory,
+          detail: `[${newCategory}] ${newDetail.trim()}`,
           residentName: profile.name,
           unit: profile.unit,
           phone: profile.phone,
         }),
       });
+
       if (res.ok) {
         setNewDetail("");
         setIsCreateModalOpen(false);

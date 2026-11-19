@@ -1,76 +1,73 @@
-import { db } from "@/db";
-import { residents } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/db";
+import { complaints, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
-export const dynamic = "force-dynamic";
-
-async function sendTelegram(text: string) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) return;
-  const ids = chatId.split(",").map((s) => s.trim());
-  for (const id of ids) {
-    try {
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: id, text, parse_mode: "HTML" }),
-      });
-    } catch {}
-  }
-}
+const BOT_TOKEN = "9027386348:AAESveYphsdbpLtnrew-bddA8BsgHnJJXjY";
+const CHAT_ID = "-1004379863895";
 
 export async function POST(request: Request) {
-  let kind = "SOS";
-  let detail = "";
   try {
     const body = await request.json();
-    kind = body.kind || "SOS";
-    detail = body.detail || "";
-  } catch {}
+    const { residentId, note } = body;
 
-  let nama = "Warga";
-  let unit = "-";
-  let blok = "-";
-  let telepon = "-";
+    const todayDate = new Date().toISOString().split("T")[0];
 
-  try {
-    const user = await getCurrentUser();
-    if (user) {
-      nama = user.name || nama;
-      unit = user.unit || unit;
-      const [w] = await db.select().from(residents).where(eq(residents.id, user.id)).limit(1);
-      if (w) {
-        nama = w.name || nama;
-        unit = w.unit || unit;
-        blok = w.block || blok;
-        telepon = w.phone || telepon;
+    // 1. Ambil data warga penekan SOS
+    let residentName = "Warga";
+    let residentBlock = "-";
+    let residentPhone = "-";
+
+    if (residentId) {
+      const r = await db.select().from(users).where(eq(users.id, Number(residentId))).limit(1);
+      if (r.length > 0) {
+        residentName = r[0].name;
+        residentBlock = r[0].block || "-";
+        residentPhone = r[0].phone || "-";
       }
     }
-  } catch {}
 
-  const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-  const emoji = kind === "Kebakaran" ? "🔥" : kind === "Pencurian" ? "🚨" : "🆘";
+    // 2. Simpan insiden SOS ke tabel complaints dengan kategori 'DARURAT'
+    if (residentId) {
+      await db.insert(complaints).values({
+        residentId: Number(residentId),
+        title: "🚨 TOMBOL DARURAT SOS DIPICU",
+        category: "DARURAT",
+        detail: note || "Warga memicu tombol darurat SOS dari aplikasi!",
+        date: todayDate,
+        status: "urgent",
+      });
+    }
 
-  const message = [
-    `${emoji} <b>ALERT DARURAT: ${kind.toUpperCase()}</b>`,
-    ``,
-    `👤 <b>Nama:</b> ${nama}`,
-    `🏠 <b>Unit:</b> ${unit}`,
-    `📍 <b>Blok:</b> ${blok}`,
-    `📞 <b>Telepon:</b> ${telepon}`,
-    detail ? `📝 <b>Detail:</b> ${detail}` : "",
-    ``,
-    `⏰ ${now}`,
-    ``,
-    `⚠️ <b>SEGERA CEK LOKASI & HUBUNGI WARGA!</b>`,
-  ].filter(Boolean).join("\n");
+    // 3. Kirim Alert Telegram Prioritas Tinggi
+    const sosMessage = `
+🚨🚨🚨 <b>PERINGATAN DARURAT (SOS)!</b> 🚨🚨🚨
+━━━━━━━━━━━━━━━━━━━━
+Warga menekan Tombol Darurat dari aplikasi Portal!
 
-  await sendTelegram(message);
+👤 <b>Nama:</b> ${residentName}
+🏠 <b>Blok/Rumah:</b> ${residentBlock}
+📞 <b>No HP:</b> ${residentPhone}
+⏰ <b>Waktu:</b> ${new Date().toLocaleTimeString("id-ID")} WIB
+📅 <b>Tanggal:</b> ${todayDate}
+📝 <b>Keterangan:</b> ${note || "Butuh bantuan mendesak!"}
+━━━━━━━━━━━━━━━━━━━━
+⚠️ <b>PETUGAS KEAMANAN / PENGURUS HARAP SEGERA CEK LOKASI!</b>
+    `.trim();
 
-  return new NextResponse(JSON.stringify({ ok: true, kind }), {
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-  });
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: sosMessage,
+        parse_mode: "HTML",
+      }),
+    });
+
+    return NextResponse.json({ success: true, message: "Peringatan SOS berhasil disebarkan" });
+  } catch (error) {
+    console.error("Gagal trigger SOS:", error);
+    return NextResponse.json({ error: "Gagal mengirim sinyal SOS" }, { status: 500 });
+  }
 }
