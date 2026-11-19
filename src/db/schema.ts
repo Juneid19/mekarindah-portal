@@ -61,13 +61,14 @@ export const accessCards = pgTable("access_cards", {
   active: boolean("active").default(true),
 });
 
-// --- 6. TABEL GATE EVENTS (ID adalah TEXT) ---
+// --- 6. TABEL GATE EVENTS (Riwayat Buka Gate) ---
 export const gateEvents = pgTable("gate_events", {
-  id: text("id").primaryKey(), // Menggunakan text agar cocok dengan `gate-${Date.now()}`
+  id: text("id").primaryKey(),
   residentId: text("resident_id").references(() => residents.id),
   direction: text("direction").default("in"),
   method: text("method").default("remote"),
   note: text("note"),
+  triggeredAt: timestamp("triggered_at").defaultNow(), // <--- Tambahkan kolom ini
   timestamp: timestamp("timestamp").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
