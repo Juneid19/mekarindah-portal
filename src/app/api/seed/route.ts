@@ -1,60 +1,53 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import { db } from "@/db";
+import { residents } from "@/db/schema";
 import { sql } from "drizzle-orm";
-import { ensureSeeded } from "@/lib/seed";
+import { hashPassword } from "@/lib/auth"; // Menggunakan fungsi hash asli aplikasi
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    console.log("Memulai Pembersihan Tabel...");
+    // 1. Bersihkan tabel (Hapus data lama agar tidak duplikat)
+    await db.execute(sql`DELETE FROM "sessions"`);
+    await db.execute(sql`DELETE FROM "residents"`);
 
-    // 1. HAPUS TABEL LAMA (Agar bersih dari struktur lama yang salah)
-    await db.execute(sql`DROP TABLE IF EXISTS "sessions" CASCADE;`);
-    await db.execute(sql`DROP TABLE IF EXISTS "residents" CASCADE;`);
+    // 2. Siapkan password yang ter-enkripsi
+    // Kita buat password admin: adminmekarindah
+    // Kita buat password warga: mekarindah123
+    const adminHash = hashPassword("adminmekarindah");
+    const residentHash = hashPassword("mekarindah123");
 
-    // 2. BUAT ULANG TABEL RESIDENTS DENGAN KOLOM LENGKAP
-    await db.execute(sql`
-      CREATE TABLE "residents" (
-        "id" text PRIMARY KEY,
-        "name" text NOT NULL,
-        "email" text NOT NULL UNIQUE,
-        "password_hash" text,
-        "phone" text,
-        "unit" text NOT NULL,
-        "block" text NOT NULL,
-        "role" text NOT NULL DEFAULT 'resident',
-        "emergency_name" text,
-        "emergency_phone" text,
-        "avatar" text,
-        "created_at" timestamp DEFAULT now() NOT NULL
-      );
-    `);
+    // 3. Masukkan Admin
+    await db.insert(residents).values({
+      id: "res-admin",
+      name: "Administrator RW",
+      email: "admin@mekarindah.com",
+      passwordHash: adminHash,
+      role: "admin",
+      unit: "Kantor",
+      block: "A1",
+    });
 
-    // 3. BUAT ULANG TABEL SESSIONS
-    await db.execute(sql`
-      CREATE TABLE "sessions" (
-        "token" text PRIMARY KEY,
-        "resident_id" text NOT NULL,
-        "expires_at" timestamp NOT NULL
-      );
-    `);
-
-    // 4. ISI ULANG DATA (Admin & Warga)
-    await ensureSeeded();
+    // 4. Masukkan Warga Contoh
+    await db.insert(residents).values({
+      id: "res-warga-1",
+      name: "Saluniza",
+      email: "saluniza66@gmail.com",
+      passwordHash: residentHash,
+      role: "resident",
+      unit: "B-12",
+      block: "B",
+    });
 
     return NextResponse.json({
       success: true,
-      message: "DATABASE BERHASIL DIRESET & DIISI ULANG!",
-      note: "Sekarang tabel residents sudah punya kolom emergency_name dan avatar."
+      message: "Akun Admin & Warga berhasil diperbarui dengan password ter-enkripsi.",
+      login_info: "Coba login lagi sekarang."
     });
   } catch (error: any) {
-    console.error("RESET_ERROR:", error);
-    return NextResponse.json({
-      success: false,
-      message: "Gagal reset database.",
-      error: error?.message || String(error)
-    }, { status: 500 });
+    console.error("SEED_ENCRYPT_ERROR:", error);
+    return NextResponse.json({ success: false, error: error?.message }, { status: 500 });
   }
 }
