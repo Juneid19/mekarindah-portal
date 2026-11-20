@@ -8,11 +8,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    console.log("Memulai proses pembuatan tabel (Force SQL)...");
+    console.log("Memulai Pembersihan Tabel...");
 
-    // 1. Buat tabel residents secara manual jika belum ada
+    // 1. HAPUS TABEL LAMA (Agar bersih dari struktur lama yang salah)
+    await db.execute(sql`DROP TABLE IF EXISTS "sessions" CASCADE;`);
+    await db.execute(sql`DROP TABLE IF EXISTS "residents" CASCADE;`);
+
+    // 2. BUAT ULANG TABEL RESIDENTS DENGAN KOLOM LENGKAP
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "residents" (
+      CREATE TABLE "residents" (
         "id" text PRIMARY KEY,
         "name" text NOT NULL,
         "email" text NOT NULL UNIQUE,
@@ -28,27 +32,28 @@ export async function GET() {
       );
     `);
 
-    // 2. Buat tabel sessions
+    // 3. BUAT ULANG TABEL SESSIONS
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "sessions" (
+      CREATE TABLE "sessions" (
         "token" text PRIMARY KEY,
         "resident_id" text NOT NULL,
         "expires_at" timestamp NOT NULL
       );
     `);
 
-    // 3. Jalankan seed untuk isi data admin & warga
+    // 4. ISI ULANG DATA (Admin & Warga)
     await ensureSeeded();
 
     return NextResponse.json({
       success: true,
-      message: "Tabel berhasil dibuat dan database berhasil diisi data awal.",
+      message: "DATABASE BERHASIL DIRESET & DIISI ULANG!",
+      note: "Sekarang tabel residents sudah punya kolom emergency_name dan avatar."
     });
   } catch (error: any) {
-    console.error("FORCE_SEED_ERROR:", error);
+    console.error("RESET_ERROR:", error);
     return NextResponse.json({
       success: false,
-      message: "Gagal membuat tabel atau mengisi data.",
+      message: "Gagal reset database.",
       error: error?.message || String(error)
     }, { status: 500 });
   }
