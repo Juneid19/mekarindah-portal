@@ -754,7 +754,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
             Perumahan Mekar Indah
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs relative z-10">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs relative z-10">
             <div>
               <div className="text-[10px] text-emerald-300 uppercase font-semibold">Status Hunian</div>
               <div className="font-bold">{item.status}</div>
@@ -763,13 +763,18 @@ const handleTambahProperti = (e: React.FormEvent) => {
               <div className="text-[10px] text-emerald-300 uppercase font-semibold">Nama Penghuni</div>
               <div className="font-bold">{item.penghuni}</div>
             </div>
+            {/* INI YANG DITAMBAHKAN: LUAS BANGUNAN & LUAS TANAH */}
+            <div>
+              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Luas Bangunan / Tanah</div>
+              <div className="font-bold">{item.luasBangunan || 60} m² / {item.luasTanah || 90} m²</div>
+            </div>
             <div>
               <div className="text-[10px] text-emerald-300 uppercase font-semibold">Daya Listrik</div>
               <div className="font-bold">{item.listrik}</div>
             </div>
-            <div>
-              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</div>
-              <div className="font-bold text-emerald-300">Rp {item.ipl.toLocaleString('id-ID')} / bln</div>
+            <div className="col-span-2 pt-2 border-t border-white/10 flex justify-between items-center">
+              <span className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</span>
+              <span className="font-bold text-emerald-300">Rp {item.ipl.toLocaleString('id-ID')} / bln</span>
             </div>
           </div>
         </div>
@@ -1655,7 +1660,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
 {/* MODAL TAMBAH PROPERTI */}
 {modalPropertiBuka && (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-    <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+    <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="font-bold text-lg text-slate-800">Tambah Unit Properti</h3>
@@ -1669,7 +1674,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
         </button>
       </div>
 
-      <form onSubmit={handleTambahProperti} className="space-y-4">
+      <form onSubmit={handleTambahProperti} className="space-y-3.5">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Blok</label>
@@ -1693,6 +1698,38 @@ const handleTambahProperti = (e: React.FormEvent) => {
               className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
               required
             />
+          </div>
+        </div>
+
+        {/* INPUT LUAS TANAH & LUAS BANGUNAN */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Luas Tanah (LT)</label>
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="Contoh: 90"
+                value={formProperti.luasTanah}
+                onChange={(e) => setFormProperti({ ...formProperti, luasTanah: e.target.value })}
+                className="w-full text-sm p-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+              <span className="absolute right-3 top-3 text-xs text-slate-400 font-bold">m²</span>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Luas Bangunan (LB)</label>
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="Contoh: 60"
+                value={formProperti.luasBangunan}
+                onChange={(e) => setFormProperti({ ...formProperti, luasBangunan: e.target.value })}
+                className="w-full text-sm p-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+              <span className="absolute right-3 top-3 text-xs text-slate-400 font-bold">m²</span>
+            </div>
           </div>
         </div>
 
@@ -1734,7 +1771,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
           </select>
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-3">
           <button
             type="button"
             onClick={() => setModalPropertiBuka(false)}
@@ -1753,6 +1790,3 @@ const handleTambahProperti = (e: React.FormEvent) => {
     </div>
   </div>
 )}
-    </div>
-  );
-}
