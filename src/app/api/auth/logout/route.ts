@@ -5,10 +5,13 @@ import { NextResponse } from "next/server";
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    // Hapus cookie session
     cookieStore.delete("session_token");
-    
-    return NextResponse.json({ success: true, message: "Berhasil keluar" });
+    cookieStore.delete("session");
+
+    const res = NextResponse.json({ success: true, message: "Berhasil logout" });
+    res.cookies.delete("session_token");
+    res.cookies.delete("session");
+    return res;
   } catch (error) {
     return NextResponse.json({ success: false }, { status: 500 });
   }

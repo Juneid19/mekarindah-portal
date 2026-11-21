@@ -61,6 +61,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // FUNGSI LOGOUT / QUIT SEBENARNYA
+  const handleLogout = async () => {
+    if (confirm("Apakah Anda yakin ingin keluar dan menutup sesi Admin?")) {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
+      // Langsung diarahkan ke Halaman Login khusus
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar Desktop */}
@@ -98,11 +111,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
+        {/* TOMBOL QUIT DI DESKTOP */}
         <div className="p-4 border-t border-slate-100">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-medium text-sm"
+          >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium text-sm">Keluar Portal</span>
-          </Link>
+            <span>Keluar Portal</span>
+          </button>
         </div>
       </aside>
 
@@ -127,14 +144,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </main>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Drawer */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         >
           <div 
-            className="absolute left-0 top-0 bottom-0 w-3/4 max-w-xs bg-white flex flex-col p-6 animate-in slide-in-from-left duration-300"
+            className="absolute left-0 top-0 bottom-0 w-3/4 max-w-xs bg-white flex flex-col p-6 shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-8">
@@ -143,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X className="w-6 h-6 text-slate-400" />
               </button>
             </div>
-            <nav className="space-y-2">
+            <nav className="space-y-2 flex-1 overflow-y-auto">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -158,6 +175,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Link>
               ))}
             </nav>
+
+            {/* TOMBOL QUIT DI MOBILE */}
+            <div className="mt-auto pt-6 border-t border-slate-100">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl font-bold text-sm"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Keluar &amp; Quit</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
