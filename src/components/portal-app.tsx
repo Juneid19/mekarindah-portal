@@ -722,72 +722,69 @@ const handleTambahProperti = (e: React.FormEvent) => {
             </div>
           )}
 
-{activeTab === "properti" && (
-  <div className="space-y-4 p-4 max-w-xl mx-auto">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-800">Informasi Properti</h2>
-        <p className="text-xs text-slate-500">Unit hunian terdaftar di RW Mekar Indah</p>
-      </div>
-      <button
-        onClick={() => setModalPropertiBuka(true)}
-        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-      >
-        <span>+</span> Tambah Unit
-      </button>
-    </div>
-
-    <div className="space-y-3">
-      {daftarProperti.map((item) => (
-        <div key={item.id} className="bg-gradient-to-br from-emerald-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <span className="px-2.5 py-1 bg-white/10 text-emerald-300 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10">
-              Unit Terverifikasi
-            </span>
-            <span className="text-xs text-emerald-200 font-medium">RW Mekar Indah</span>
-          </div>
-          
-          <div className="text-2xl font-black mb-1 relative z-10">
-            Blok {item.blok} No. {item.nomor}
-          </div>
-          <div className="text-xs text-emerald-200 mb-6 relative z-10">
-            Perumahan Mekar Indah
+  {/* ======================================================== */}
+      {/* TAB PROPERTI                                             */}
+      {/* ======================================================== */}
+      {activeTab === "properti" && (
+        <div className="space-y-4 p-4 max-w-xl mx-auto pb-24">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Informasi Properti</h2>
+              <p className="text-xs text-slate-500">Unit hunian terdaftar di RW Mekar Indah</p>
+            </div>
+            <button
+              onClick={() => setModalPropertiBuka(true)}
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>+</span> Tambah Unit
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs relative z-10">
-            <div>
-              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Status Hunian</div>
-              <div className="font-bold">{item.status}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Nama Penghuni</div>
-              <div className="font-bold">{item.penghuni}</div>
-            </div>
-            {/* INI YANG DITAMBAHKAN: LUAS BANGUNAN & LUAS TANAH */}
-            <div>
-              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Luas Bangunan / Tanah</div>
-              <div className="font-bold">{item.luasBangunan || 60} m² / {item.luasTanah || 90} m²</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-emerald-300 uppercase font-semibold">Daya Listrik</div>
-              <div className="font-bold">{item.listrik}</div>
-            </div>
-            <div className="col-span-2 pt-2 border-t border-white/10 flex justify-between items-center">
-              <span className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</span>
-              <span className="font-bold text-emerald-300">Rp {item.ipl.toLocaleString('id-ID')} / bln</span>
-            </div>
+          <div className="space-y-3">
+            {daftarProperti.map((item) => (
+              <div key={item.id} className="bg-gradient-to-br from-emerald-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                  <span className="px-2.5 py-1 bg-white/10 text-emerald-300 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10">
+                    Unit Terverifikasi
+                  </span>
+                  <span className="text-xs text-emerald-200 font-medium">RW Mekar Indah</span>
+                </div>
+                
+                <div className="text-2xl font-black mb-1 relative z-10">
+                  Blok {item.blok} No. {item.nomor}
+                </div>
+                <div className="text-xs text-emerald-200 mb-6 relative z-10">
+                  Perumahan Mekar Indah
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs relative z-10">
+                  <div>
+                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Status Hunian</div>
+                    <div className="font-bold">{item.status}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Nama Penghuni</div>
+                    <div className="font-bold">{item.penghuni}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Luas Bangunan / Tanah</div>
+                    <div className="font-bold">{item.luasBangunan} m² / {item.luasTanah} m²</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Daya Listrik</div>
+                    <div className="font-bold">{item.listrik}</div>
+                  </div>
+                  <div className="col-span-2 pt-2 border-t border-white/10 flex justify-between items-center">
+                    <span className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</span>
+                    <span className="font-bold text-emerald-300">Rp {item.ipl.toLocaleString('id-ID')} / bln</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
+      )}
 
-    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-xs text-slate-500">
-      <p>
-        📌 Jika Anda memiliki lebih dari 1 unit rumah atau ruko di lingkungan Mekar Indah, Anda dapat menambahkannya melalui tombol <b>+ Tambah Unit</b> di atas.
-      </p>
-    </div>
-  </div>
-)}
 
           {/* TAB 2: PROFIL SAYA */}
           {activeTab === "profil" && (
@@ -1553,240 +1550,77 @@ const handleTambahProperti = (e: React.FormEvent) => {
         </div>
       )}
 
-      {/* MODAL: BUAT ADUAN BARU */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+         {/* ======================================================== */}
+      {/* MODAL TAMBAH PROPERTI                                    */}
+      {/* ======================================================== */}
+      {modalPropertiBuka && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-800 text-lg">Buat Laporan Baru</h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateComplaint} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                  Kategori
-                </label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
-                >
-                  <option value="Fasilitas Umum">Fasilitas Umum</option>
-                  <option value="Keamanan Lingkungan">Keamanan Lingkungan</option>
-                  <option value="Kebersihan">Kebersihan & Sampah</option>
-                  <option value="Lain-lain">Lain-lain</option>
+                <h3 className="font-bold text-lg text-slate-800">Tambah Unit Properti</h3>
+                <p className="text-xs text-slate-500">Daftarkan kepemilikan unit baru</p>
+              </div>
+              <button onClick={() => setModalPropertiBuka(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">✕</button>
+            </div>
+
+            <form onSubmit={handleTambahProperti} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Blok</label>
+                  <select value={formProperti.blok} onChange={(e) => setFormProperti({ ...formProperti, blok: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold">
+                    {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((b) => <option key={b} value={b}>Blok {b}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">No. Rumah</label>
+                  <input type="text" placeholder="Contoh: 15" value={formProperti.nomor} onChange={(e) => setFormProperti({ ...formProperti, nomor: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Luas Tanah</label>
+                  <div className="relative">
+                    <input type="number" placeholder="90" value={formProperti.luasTanah} onChange={(e) => setFormProperti({ ...formProperti, luasTanah: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
+                    <span className="absolute right-3 top-3 text-[10px] text-slate-400">m²</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Luas Bangunan</label>
+                  <div className="relative">
+                    <input type="number" placeholder="60" value={formProperti.luasBangunan} onChange={(e) => setFormProperti({ ...formProperti, luasBangunan: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
+                    <span className="absolute right-3 top-3 text-[10px] text-slate-400">m²</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+                <select value={formProperti.status} onChange={(e) => setFormProperti({ ...formProperti, status: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <option value="Milik Pribadi (Tetap)">Milik Pribadi (Tetap)</option>
+                  <option value="Sewa / Kontrak">Sewa / Kontrak</option>
                 </select>
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                  Detail Keluhan
-                </label>
-                <textarea
-                  rows={4}
-                  value={newDetail}
-                  onChange={(e) => setNewDetail(e.target.value)}
-                  placeholder="Tuliskan keluhan atau laporan Anda secara jelas..."
-                  className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Daya Listrik</label>
+                <select value={formProperti.listrik} onChange={(e) => setFormProperti({ ...formProperti, listrik: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <option value="1.300 VA">1.300 VA</option>
+                  <option value="2.200 VA">2.200 VA</option>
+                  <option value="3.500 VA">3.500 VA</option>
+                </select>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-slate-500 text-sm font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center gap-1.5"
-                >
-                  {submitting && <Loader2 className="animate-spin" size={16} />} Kirim Aduan
-                </button>
+
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setModalPropertiBuka(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-md">Simpan</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL: EDIT ADUAN */}
-      {editingItem && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-800 text-lg">Perbarui Aduan</h3>
-              <button onClick={() => setEditingItem(null)} className="text-slate-400">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleUpdateComplaint} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                  Rincian Aduan
-                </label>
-                <textarea
-                  rows={4}
-                  value={editingItem.detail}
-                  onChange={(e) => setEditingItem({ ...editingItem, detail: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 text-slate-500 text-sm font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center gap-1.5"
-                >
-                  {submitting && <Loader2 className="animate-spin" size={16} />} Simpan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-{/* MODAL TAMBAH PROPERTI */}
-{modalPropertiBuka && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-    <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="font-bold text-lg text-slate-800">Tambah Unit Properti</h3>
-          <p className="text-xs text-slate-500">Daftarkan kepemilikan unit / rumah baru</p>
-        </div>
-        <button
-          onClick={() => setModalPropertiBuka(false)}
-          className="text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center bg-slate-100"
-        >
-          ✕
-        </button>
-      </div>
-
-      <form onSubmit={handleTambahProperti} className="space-y-3.5">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Blok</label>
-            <select
-              value={formProperti.blok}
-              onChange={(e) => setFormProperti({ ...formProperti, blok: e.target.value })}
-              className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-bold"
-            >
-              {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((blok) => (
-                <option key={blok} value={blok}>Blok {blok}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Nomor Unit / Rumah</label>
-            <input
-              type="text"
-              placeholder="Contoh: 15 / 08"
-              value={formProperti.nomor}
-              onChange={(e) => setFormProperti({ ...formProperti, nomor: e.target.value })}
-              className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-              required
-            />
-          </div>
-        </div>
-
-        {/* INPUT LUAS TANAH & LUAS BANGUNAN */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Luas Tanah (LT)</label>
-            <div className="relative">
-              <input
-                type="number"
-                placeholder="Contoh: 90"
-                value={formProperti.luasTanah}
-                onChange={(e) => setFormProperti({ ...formProperti, luasTanah: e.target.value })}
-                className="w-full text-sm p-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-                required
-              />
-              <span className="absolute right-3 top-3 text-xs text-slate-400 font-bold">m²</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Luas Bangunan (LB)</label>
-            <div className="relative">
-              <input
-                type="number"
-                placeholder="Contoh: 60"
-                value={formProperti.luasBangunan}
-                onChange={(e) => setFormProperti({ ...formProperti, luasBangunan: e.target.value })}
-                className="w-full text-sm p-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-                required
-              />
-              <span className="absolute right-3 top-3 text-xs text-slate-400 font-bold">m²</span>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Status Kepemilikan</label>
-          <select
-            value={formProperti.status}
-            onChange={(e) => setFormProperti({ ...formProperti, status: e.target.value })}
-            className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium"
-          >
-            <option value="Milik Pribadi (Tetap)">Milik Pribadi (Tetap)</option>
-            <option value="Sewa / Kontrak">Sewa / Kontrak</option>
-            <option value="Rumah Singgah / Kosong">Rumah Singgah / Kosong</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Nama Penghuni Utama</label>
-          <input
-            type="text"
-            placeholder="Nama kepala keluarga / penghuni"
-            value={formProperti.penghuni}
-            onChange={(e) => setFormProperti({ ...formProperti, penghuni: e.target.value })}
-            className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Daya Listrik PLN</label>
-          <select
-            value={formProperti.listrik}
-            onChange={(e) => setFormProperti({ ...formProperti, listrik: e.target.value })}
-            className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium"
-          >
-            <option value="1.300 VA">1.300 VA</option>
-            <option value="2.200 VA">2.200 VA</option>
-            <option value="3.500 VA">3.500 VA</option>
-            <option value="5.500 VA">5.500 VA</option>
-          </select>
-        </div>
-
-        <div className="flex gap-2 pt-3">
-          <button
-            type="button"
-            onClick={() => setModalPropertiBuka(false)}
-            className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition"
-          >
-            Simpan Unit
-          </button>
-        </div>
-      </form>
     </div>
-  </div>
-)}
+  );
+}
