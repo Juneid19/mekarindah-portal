@@ -38,8 +38,8 @@ const [iplData, setIplData] = useState([]);
   const [newCategory, setNewCategory] = useState("Fasilitas Umum");
   const [editingItem, setEditingItem] = useState<any | null>(null);
 
-    // ==========================================
-  // 3. STATE KENDARAAN
+     // ==========================================
+  // 3. STATE KENDARAAN & PROPERTI
   // ==========================================
   const [vehicles, setVehicles] = useState<any[]>([
     { id: "veh-1", type: "Mobil", plate: "B 1234 MKR", brand: "Honda HR-V", color: "Putih" },
@@ -54,9 +54,6 @@ const [iplData, setIplData] = useState([]);
     color: "",
   });
 
-  // ==========================================
-  // 4. STATE PROPERTI
-  // ==========================================
   const [propertyData, setPropertyData] = useState({
     unit: profile?.unit || "B-12",
     block: "B",
@@ -68,15 +65,12 @@ const [iplData, setIplData] = useState([]);
   const [isEditPropertyOpen, setIsEditPropertyOpen] = useState(false);
 
   // ==========================================
-  // 5. STATE SMART GATE & SOS
+  // STATE SMART GATE & SOS
   // ==========================================
   const [sosActive, setSosActive] = useState(false);
   const [gateStatus, setGateStatus] = useState<"CLOSED" | "OPENING" | "OPEN">("CLOSED");
   const [gateCountdown, setGateCountdown] = useState(0);
 
-  // ==========================================
-  // 6. STATE KAS RW & IPL
-  // ==========================================
   const [kasRw, setKasRw] = useState<{
     balance: number;
     totalIncome: number;
@@ -90,13 +84,14 @@ const [iplData, setIplData] = useState([]);
   });
 
   // ==========================================
-  // EFEK LOAD DATA DARI DATABASE NEON
+  // EFEK LOAD DATA DARI DATABASE (NEON)
   // ==========================================
 
-  // A. Load Data Kas RW & IPL (DITUTUP DENGAN BENAR)
+  // 1. Load Kas RW & IPL (Utuh & Ditutup Rapi)
   useEffect(() => {
     async function ambilDataKasDanIpl() {
       try {
+        // Ambil Data Kas
         const resKas = await fetch("/api/admin/finance");
         if (resKas.ok) {
           const dataKas = await resKas.json();
@@ -110,14 +105,24 @@ const [iplData, setIplData] = useState([]);
             setTotalKas(saldo);
           }
         }
-      } catch (err) {
-        console.warn("Gagal muat kas:", err);
+
+        // Ambil Data Tagihan IPL
+        const resIpl = await fetch("/api/invoices");
+        if (resIpl.ok) {
+          const dataIpl = await resIpl.json();
+          if (Array.isArray(dataIpl)) {
+            setIplData(dataIpl);
+          }
+        }
+      } catch (error) {
+        console.error("Gagal sinkron data Kas & IPL:", error);
       }
     }
-    ambilDataKasDanIpl();
-  }, []);
 
-  // B. Load Data Kendaraan (DITUTUP DENGAN BENAR)
+    ambilDataKasDanIpl();
+  }, [initialUser?.id]);
+
+  // 2. Load Data Kendaraan
   useEffect(() => {
     fetch("/api/vehicles")
       .then((res) => res.json())
@@ -130,10 +135,8 @@ const [iplData, setIplData] = useState([]);
   }, []);
 
   // ==========================================
-  // FUNGSI AKSI (HANDLERS)
+  // FUNGSI HANDLER KENDARAAN & PROPERTI
   // ==========================================
-
-  // Simpan Kendaraan Baru
   const handleSaveVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehicleForm.plate) {
@@ -162,39 +165,22 @@ const [iplData, setIplData] = useState([]);
         throw new Error(data.message || "Gagal menyimpan");
       }
     } catch (err: any) {
-      // Fallback lokal jika ada kendala jaringan
       const newVeh = { id: `veh-${Date.now()}`, ...vehicleForm };
       setVehicles((prev) => [newVeh, ...prev]);
       setIsAddVehicleOpen(false);
       setVehicleForm({ type: "Mobil", plate: "", brand: "", color: "" });
-      alert("✅ Kendaraan tersimpan!");
+      alert("✅ Kendaraan tersimpan di perangkat!");
     } finally {
       setSavingVehicle(false);
     }
   };
 
-  // Simpan Perubahan Properti
   const handleSaveProperty = (e: React.FormEvent) => {
     e.preventDefault();
     alert("✅ Data informasi properti hunian berhasil diperbarui!");
     setIsEditPropertyOpen(false);
   };
-      // 2. Ambil data Tagihan IPL milik warga yang sedang login
-      if (initialUser?.id) {
-        const resIpl = await fetch(`/api/admin/ipl?userId=${initialUser.id}`);
-        if (resIpl.ok) {
-          const dataIpl = await resIpl.json();
-          setIplData(dataIpl);
-        }
-      }
-    } catch (error) {
-      console.error("Gagal sinkron data Kas & IPL:", error);
-    }
-  }
-
-  ambilDataKasDanIpl();
-}, [initialUser?.id]);
-
+  
   // 4. STATE PERMINTAAN DOKUMEN
   const [documents, setDocuments] = useState<any[]>([
     {
