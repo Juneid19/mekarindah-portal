@@ -1,39 +1,66 @@
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq, asc, and } from "drizzle-orm";
+// @ts-nocheck
 import { NextResponse } from "next/server";
+import { db } from "@/db";
+import { residents } from "@/db/schema";
+import { desc } from "drizzle-orm";
+import { hashPassword } from "@/lib/auth";
 
-export async function GET(request: Request) {
+export const dynamic = "force-dynamic";
+
+// 1. GET: Ambil daftar seluruh warga
+export async function GET() {
   try {
-    // 1. Ambil parameter dari URL (contoh: ?page=1&limit=50)
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = (page - 1) * limit;
+    const list = await db
+      .select()
+      .from(residents)
+      .orderBy(desc(residents.createdAt));
+    return NextResponse.json(list);
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message }, { status: 500 });
+  }
+}
 
-    // 2. Query ke Neon Database
-    // Kita filter hanya yang rolenya 'resident'
-    const residentsData = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        phone: users.phone,
-        block: users.block,
-        role: users.role,
+// 2. POST: Simpan warga baru ke Neon
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { name, email, phone, unit, block, password } = body;
+
+    if (!name || !email || !unit || !block) {
+      return NextResponse.json(
+        { message: "Nama, email, unit, dan blok wajib diisi!" },
+        { status: 400 }
+      );
+    }
+
+    // Password default jika admin tidak mengisi: mekarindah123
+    const rawPassword = password || "mekarindah123";
+    const passwordHash = hashPassword(rawPassword);
+    const id = `res-${Date.now()}`;
+
+    const newResident = await db
+      .insert(residents)
+      .values({
+        id,
+        name,
+        email: email.trim().toLowerCase(),
+        phone: phone || "",
+        unit,
+        block,
+        role: "resident",
+        passwordHash,
       })
-      .from(users)
-      .where(eq(users.role, "resident"))
-      .orderBy(asc(users.name)) // Urutkan nama A-Z
-      .limit(limit)
-      .offset(offset);
+      .returning();
 
-    // 3. Kembalikan data dalam format JSON
-    return NextResponse.json(residentsData);
-  } catch (error) {
-    console.error("Database Error:", error);
+    return NextResponse.json({
+      success: true,
+      message: "Warga berhasil ditambahkan!",
+      data: newResident[0],
+    });
+  } catch (error: any) {
+    console.error("ADD_RESIDENT_ERROR:", error);
     return NextResponse.json(
-      { error: "Gagal mengambil data warga" }, 
+      { success: false, message: error?.message || "Gagal menambah warga" },
       { status: 500 }
     );
   }
