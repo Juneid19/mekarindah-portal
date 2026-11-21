@@ -14,7 +14,9 @@ import {
   X,
   LogOut,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Wallet,
+  Receipt
 } from "lucide-react";
 
 const navItems = [
@@ -27,6 +29,16 @@ const navItems = [
     href: "/admin/residents",
     label: "Data Warga",
     icon: Users,
+  },
+  {
+    href: "/admin/finance",
+    label: "Kas Keuangan RW",
+    icon: Wallet,
+  },
+  {
+    href: "/admin/ipl",
+    label: "Tagihan IPL Warga",
+    icon: Receipt,
   },
   {
     href: "/admin/cards",
@@ -63,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -72,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group ${
                   isActive 
-                    ? "bg-emerald-50 text-emerald-700 shadow-sm" 
+                    ? "bg-emerald-50 text-emerald-700 font-semibold shadow-sm" 
                     : "text-slate-500 hover:bg-slate-50"
                 }`}
               >
@@ -137,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-4 rounded-xl font-medium ${
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium ${
                     pathname === item.href ? "bg-emerald-50 text-emerald-700" : "text-slate-500"
                   }`}
                 >
