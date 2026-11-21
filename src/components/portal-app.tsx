@@ -38,6 +38,17 @@ const [iplData, setIplData] = useState([]);
   const [newCategory, setNewCategory] = useState("Fasilitas Umum");
   const [editingItem, setEditingItem] = useState<any | null>(null);
 
+  // 3. STATE KENDARAAN (TAMBAHKAN INI)
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
+  const [savingVehicle, setSavingVehicle] = useState(false);
+  const [vehicleForm, setVehicleForm] = useState({
+    type: "Mobil",
+    plate: "",
+    brand: "",
+    color: "",
+  });
+
   // 3. STATE SMART GATE & SOS
   const [sosActive, setSosActive] = useState(false);
   const [gateStatus, setGateStatus] = useState<"CLOSED" | "OPENING" | "OPEN">("CLOSED");
@@ -85,6 +96,51 @@ const [iplData, setIplData] = useState([]);
         }, 0);
         setTotalKas(saldo);
       }
+
+  // AMBIL DATA KENDARAAN DARI API
+  useEffect(() => {
+    fetch("/api/vehicles")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setVehicles(data);
+      })
+      .catch((err) => console.error("Load kendaraan error:", err));
+  }, []);
+
+  // FUNGSI SIMPAN KENDARAAN BARU
+  const handleSaveVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vehicleForm.plate) {
+      alert("Nomor plat polisi wajib diisi!");
+      return;
+    }
+
+    try {
+      setSavingVehicle(true);
+      const res = await fetch("/api/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          residentId: (profile as any)?.id || initialUser?.id || "res-warga-1",
+          ...vehicleForm,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Kendaraan berhasil didaftarkan ke gerbang!");
+        setVehicles((prev) => [data, ...prev]);
+        setIsAddVehicleOpen(false);
+        setVehicleForm({ type: "Mobil", plate: "", brand: "", color: "" });
+      } else {
+        alert("❌ " + (data.message || "Gagal menyimpan kendaraan"));
+      }
+    } catch (err: any) {
+      alert("❌ " + err.message);
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
 
       // 2. Ambil data Tagihan IPL milik warga yang sedang login
       if (initialUser?.id) {
@@ -592,6 +648,56 @@ const [iplData, setIplData] = useState([]);
             </div>
           )}
 
+{activeTab === "properti" && (
+  <div className="space-y-4 p-4 max-w-xl mx-auto">
+    <div>
+      <h2 className="text-lg font-bold text-slate-800">Informasi Properti</h2>
+      <p className="text-xs text-slate-500">Detail hunian resmi Anda yang terdaftar di Pengurus RW</p>
+    </div>
+
+    <div className="bg-gradient-to-br from-emerald-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <span className="px-2.5 py-1 bg-white/10 text-emerald-300 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+          Unit Terverifikasi
+        </span>
+        <span className="text-xs text-emerald-200 font-medium">RW Mekar Indah</span>
+      </div>
+      
+      <div className="text-2xl font-black mb-1 relative z-10">
+        Unit {profile.unit}
+      </div>
+      <div className="text-xs text-emerald-200 mb-6 relative z-10">
+        Perumahan Mekar Indah
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs relative z-10">
+        <div>
+          <div className="text-[10px] text-emerald-300 uppercase font-semibold">Status Hunian</div>
+          <div className="font-bold">Milik Pribadi (Tetap)</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-emerald-300 uppercase font-semibold">Nama Penghuni</div>
+          <div className="font-bold">{profile.name}</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-emerald-300 uppercase font-semibold">Daya Listrik</div>
+          <div className="font-bold">2.200 VA (Token)</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</div>
+          <div className="font-bold text-emerald-300">Rp 150.000 / bln</div>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-xs text-slate-500">
+      <p>
+        📌 Jika ada perubahan data status kepemilikan, sewa, atau renovasi rumah, silakan ajukan laporan ke pengurus RW melalui tab <b>Aduan</b>.
+      </p>
+    </div>
+  </div>
+)}
+
           {/* TAB 2: PROFIL SAYA */}
           {activeTab === "profil" && (
             <div className="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
@@ -1080,6 +1186,147 @@ const [iplData, setIplData] = useState([]);
             </div>
           )}
         </main>
+
+        {/* TEMPEL DI BAWAH BLOK TAB LAINNYA */}
+{activeTab === "kendaraan" && (
+  <div className="space-y-4 p-4 max-w-xl mx-auto">
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-800">Kendaraan Terdaftar</h2>
+        <p className="text-xs text-slate-500">Kendaraan yang dikenali di palang gerbang RFID</p>
+      </div>
+      <button
+        onClick={() => setIsAddVehicleOpen(true)}
+        className="inline-flex items-center gap-1 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+      >
+        <Plus className="w-4 h-4" />
+        Tambah Kendaraan
+      </button>
+    </div>
+
+    {/* DAFTAR KENDARAAN */}
+    <div className="space-y-3">
+      {vehicles.length === 0 ? (
+        <div className="bg-white p-8 rounded-2xl text-center border border-dashed border-slate-200">
+          <Car className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">Belum ada kendaraan yang didaftarkan.</p>
+          <button
+            onClick={() => setIsAddVehicleOpen(true)}
+            className="mt-3 text-xs font-bold text-emerald-600 hover:underline"
+          >
+            + Daftarkan Mobil / Motor
+          </button>
+        </div>
+      ) : (
+        vehicles.map((v: any, idx: number) => (
+          <div key={v.id || idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                {v.type === "Mobil" ? "🚗" : "🏍️"}
+              </div>
+              <div>
+                <div className="font-mono font-bold text-slate-800 text-sm tracking-wide">
+                  {v.plate}
+                </div>
+                <div className="text-xs text-slate-400">
+                  {v.brand || v.type} • {v.color || "Warna Standar"}
+                </div>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold">
+              Terverifikasi
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+
+    {/* POPUP MODAL TAMBAH */}
+    {isAddVehicleOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-100">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 className="font-bold text-slate-800 text-sm">Daftarkan Kendaraan</h3>
+            <button onClick={() => setIsAddVehicleOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+
+          <form onSubmit={handleSaveVehicle} className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Jenis</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVehicleForm({ ...vehicleForm, type: "Mobil" })}
+                  className={`py-2 text-xs font-bold rounded-xl border ${vehicleForm.type === "Mobil" ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "border-slate-200 text-slate-500"}`}
+                >
+                  🚗 Mobil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVehicleForm({ ...vehicleForm, type: "Motor" })}
+                  className={`py-2 text-xs font-bold rounded-xl border ${vehicleForm.type === "Motor" ? "bg-emerald-50 border-emerald-500 text-emerald-700" : "border-slate-200 text-slate-500"}`}
+                >
+                  🏍️ Motor
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Nomor Plat Polisi *</label>
+              <input
+                type="text"
+                required
+                placeholder="Contoh: B 1234 MKR"
+                value={vehicleForm.plate}
+                onChange={(e) => setVehicleForm({ ...vehicleForm, plate: e.target.value.toUpperCase() })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Merk / Tipe</label>
+              <input
+                type="text"
+                placeholder="Contoh: Honda HR-V / NMAX"
+                value={vehicleForm.brand}
+                onChange={(e) => setVehicleForm({ ...vehicleForm, brand: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Warna</label>
+              <input
+                type="text"
+                placeholder="Contoh: Putih Metalik"
+                value={vehicleForm.color}
+                onChange={(e) => setVehicleForm({ ...vehicleForm, color: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+
+            <div className="pt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAddVehicleOpen(false)}
+                className="flex-1 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={savingVehicle}
+                className="flex-[2] py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50"
+              >
+                {savingVehicle ? "Menyimpan..." : "Simpan Kendaraan"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
         {/* BOTTOM NAVIGATION KHUSUS HP */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-14 z-30">
