@@ -1,263 +1,454 @@
-// @ts-nocheck
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { UserPlus, Search, ChevronLeft, ChevronRight, X, Phone, Mail, Home } from "lucide-react";
-
-interface Resident {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  unit: string;
-  block: string;
-  role: string;
-}
+import { useState, useEffect } from "react";
+import { Plus, Search, Home, Car, Trash2, X, CheckCircle2 } from "lucide-react";
 
 export default function AdminResidentsPage() {
-  const [residents, setResidents] = useState<Resident[]>([]);
+  const [residents, setResidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50; // Sesuai permintaan: 50 warga per halaman
+  const [selectedBlock, setSelectedBlock] = useState("SEMUA");
+  const [search, setSearch] = useState("");
 
-  // Daftar Blok A sampai J
-  const blockOptions = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+  // Modal State
+  const [activeModal, setActiveModal] = useState<"property" | "vehicle" | null>(null);
+  const [selectedResident, setSelectedResident] = useState<any>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+  // Data List Modal
+  const [residentProperties, setResidentProperties] = useState<any[]>([]);
+  const [residentVehicles, setResidentVehicles] = useState<any[]>([]);
+
+  // Form State Properti
+  const [propForm, setPropForm] = useState({
     block: "A",
-    unit: "",
-    password: "mekarindah123",
+    unitNumber: "",
+    surfaceArea: "90",
+    buildingArea: "60",
+    electricity: "2.200 VA",
+    status: "Milik Pribadi (Tetap)",
   });
 
-  const loadResidents = async () => {
+  // Form State Kendaraan
+  const [vehForm, setVehForm] = useState({
+    plate: "",
+    type: "Mobil",
+    brand: "",
+    color: "",
+  });
+
+  // Load Residents
+  const fetchResidents = async () => {
     try {
-      setLoading(true);
-      const res = await fetch("/api/residents");
-      if (res.ok) {
-        const data = await res.json();
-        setResidents(data);
-      }
-    } catch (err) {
-      console.error("Gagal load warga:", err);
+      const res = await fetch("/api/admin/residents");
+      const json = await res.json();
+      if (json.data) setResidents(json.data);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadResidents();
+    fetchResidents();
   }, []);
 
-  const handleAddResident = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Buka Modal Properti Warga
+  const handleOpenPropertyModal = async (resident: any) => {
+    setSelectedResident(resident);
+    setPropForm({ ...propForm, block: resident.block || "A", unitNumber: resident.unit || "" });
+    setActiveModal("property");
+
     try {
-      setIsSubmitting(true);
-      const res = await fetch("/api/residents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Gagal menambah");
-
-      alert("✅ Warga berhasil ditambahkan ke Blok " + formData.block);
-      setIsModalOpen(false);
-      setFormData({ name: "", email: "", phone: "", block: "A", unit: "", password: "mekarindah123" });
-      loadResidents();
-    } catch (error: any) {
-      alert("❌ " + error.message);
-    } finally {
-      setIsSubmitting(false);
+      const res = await fetch(`/api/admin/properties?residentId=${resident.id}`);
+      const json = await res.json();
+      if (json.data) setResidentProperties(json.data);
+    } catch (e) {
+      console.error(e);
     }
   };
 
-  // Filter & Paginasi
-  const filtered = residents.filter((r) =>
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.block.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Simpan Properti
+  const handleSaveProperty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedResident) return;
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-  const currentResidents = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    const res = await fetch("/api/admin/properties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        residentId: selectedResident.id,
+        ...propForm,
+      }),
+    });
+
+    if (res.ok) {
+      alert("✅ Unit Properti berhasil ditambahkan!");
+      handleOpenPropertyModal(selectedResident); // refresh list
+    }
+  };
+
+  // Hapus Properti
+  const handleDeleteProperty = async (id: string) => {
+    if (!confirm("Hapus unit properti ini?")) return;
+    await fetch(`/api/admin/properties?id=${id}`, { method: "DELETE" });
+    handleOpenPropertyModal(selectedResident);
+  };
+
+  // Buka Modal Kendaraan Warga
+  const handleOpenVehicleModal = async (resident: any) => {
+    setSelectedResident(resident);
+    setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
+    setActiveModal("vehicle");
+
+    try {
+      const res = await fetch(`/api/admin/vehicles?residentId=${resident.id}`);
+      const json = await res.json();
+      if (json.data) setResidentVehicles(json.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Simpan Kendaraan
+  const handleSaveVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedResident || !vehForm.plate) return;
+
+    const res = await fetch("/api/admin/vehicles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        residentId: selectedResident.id,
+        ...vehForm,
+      }),
+    });
+
+    if (res.ok) {
+      alert("✅ Kendaraan berhasil didaftarkan!");
+      handleOpenVehicleModal(selectedResident); // refresh list
+    }
+  };
+
+  // Hapus Kendaraan
+  const handleDeleteVehicle = async (id: string) => {
+    if (!confirm("Hapus data kendaraan ini?")) return;
+    await fetch(`/api/admin/vehicles?id=${id}`, { method: "DELETE" });
+    handleOpenVehicleModal(selectedResident);
+  };
+
+  // Filter Data
+  const filteredResidents = residents.filter((r) => {
+    const matchBlock = selectedBlock === "SEMUA" || r.block === selectedBlock;
+    const matchSearch =
+      r.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.unit?.toLowerCase().includes(search.toLowerCase());
+    return matchBlock && matchSearch;
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Data Warga Mekar Indah</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Menampilkan {filtered.length} dari {residents.length} total warga
-          </p>
+          <h1 className="text-2xl font-black text-slate-800">Kelola Data Warga</h1>
+          <p className="text-xs text-slate-500">Kelola identitas, unit hunian (LT/LB), dan izin kendaraan warga</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all active:scale-95 shadow-lg shadow-emerald-600/20"
-        >
-          <UserPlus className="w-5 h-5" />
-          Tambah Warga Baru
-        </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-3">
-        <Search className="w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Cari Nama, No Rumah, atau Blok (A-J)..."
-          value={searchTerm}
-          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-          className="w-full bg-transparent border-none outline-none text-sm text-slate-700"
-        />
+      {/* FILTER BLOK A - J */}
+      <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1.5 rounded-2xl w-fit">
+        {["SEMUA", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((b) => (
+          <button
+            key={b}
+            onClick={() => setSelectedBlock(b)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              selectedBlock === b
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {b === "SEMUA" ? "Semua Blok" : `Blok ${b}`}
+          </button>
+        ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {/* TABEL DATA WARGA */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+          <div className="relative w-full max-w-xs">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <input
+              type="text"
+              placeholder="Cari nama atau nomor unit..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
+          <span className="text-xs text-slate-400 font-bold">{filteredResidents.length} Warga Ditemukan</span>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
               <tr>
-                <th className="py-4 px-6">Nama</th>
-                <th className="py-4 px-6">Blok & Unit</th>
-                <th className="py-4 px-6">Kontak</th>
-                <th className="py-4 px-6 text-center">Status</th>
+                <th className="p-4">Nama Warga</th>
+                <th className="p-4">Unit Utama</th>
+                <th className="p-4">No. Telepon</th>
+                <th className="p-4 text-center">Kelola Properti</th>
+                <th className="p-4 text-center">Kelola Kendaraan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr><td colSpan={4} className="py-10 text-center text-slate-400">Mengambil data dari database Neon...</td></tr>
-              ) : currentResidents.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50/50">
-                  <td className="py-4 px-6 font-medium text-slate-800">{r.name}</td>
-                  <td className="py-4 px-6">
-                    <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-bold mr-2">
-                      Blok {r.block}
-                    </span>
-                    <span className="text-slate-600 font-medium">Unit {r.unit}</span>
+            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+              {filteredResidents.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-50/70 transition">
+                  <td className="p-4">
+                    <div className="font-bold text-slate-900">{r.name}</div>
+                    <div className="text-[10px] text-slate-400">{r.email}</div>
                   </td>
-                  <td className="py-4 px-6 text-slate-500 text-xs italic">{r.email}</td>
-                  <td className="py-4 px-6 text-center">
-                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] uppercase font-bold">Aktif</span>
+                  <td className="p-4 font-mono font-bold text-emerald-700">
+                    Blok {r.block || "-"} No. {r.unit || "-"}
+                  </td>
+                  <td className="p-4 text-slate-500">{r.phone || "-"}</td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => handleOpenPropertyModal(r)}
+                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-[11px] inline-flex items-center gap-1.5 transition border border-blue-200"
+                    >
+                      <Home className="w-3.5 h-3.5" />
+                      Unit Properti
+                    </button>
+                  </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => handleOpenVehicleModal(r)}
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl font-bold text-[11px] inline-flex items-center gap-1.5 transition border border-emerald-200"
+                    >
+                      <Car className="w-3.5 h-3.5" />
+                      Kendaraan
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {/* Pagination Controls */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
-          <div className="text-xs text-slate-500 font-medium">
-            Halaman <span className="text-slate-800">{currentPage}</span> dari <span className="text-slate-800">{totalPages}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 disabled:opacity-20 transition-all"
-            >
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
-            </button>
-            <div className="flex gap-1 px-2">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum = i + 1;
-                if (totalPages > 5 && currentPage > 3) pageNum = currentPage - 3 + i + 1;
-                if (pageNum > totalPages) return null;
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === pageNum ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-white'}`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 disabled:opacity-20 transition-all"
-            >
-              <ChevronRight className="w-5 h-5 text-slate-600" />
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Modal with Expanded Blocks A-J */}
-      {isModalOpen && (
+      {/* ======================================================== */}
+      {/* MODAL KELOLA PROPERTI WARGA (ADMIN)                      */}
+      {/* ======================================================== */}
+      {activeModal === "property" && selectedResident && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 animate-in zoom-in duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800">Registrasi Warga Baru</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X /></button>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <div>
+                <h3 className="font-bold text-base text-slate-800">Unit Properti: {selectedResident.name}</h3>
+                <p className="text-xs text-slate-500">Kelola luas tanah, bangunan, dan unit tambahan warga</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
             </div>
-            <form onSubmit={handleAddResident} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="text-[10px] uppercase font-bold text-slate-400 ml-1">Nama Lengkap</label>
-                  <input
-                    type="text" required placeholder="Nama Warga"
-                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                  />
-                </div>
+
+            {/* FORM INPUT PROPERTI */}
+            <form onSubmit={handleSaveProperty} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div className="text-xs font-bold text-slate-700">+ Tambah Unit Rumah / Kavling Baru</div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-400 ml-1">Blok (A-J)</label>
+                  <label className="text-[10px] font-bold text-slate-500">Blok</label>
                   <select
-                    value={formData.block}
-                    onChange={e => setFormData({...formData, block: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    value={propForm.block}
+                    onChange={(e) => setPropForm({ ...propForm, block: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl font-bold"
                   >
-                    {blockOptions.map(b => (
+                    {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((b) => (
                       <option key={b} value={b}>Blok {b}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-400 ml-1">No. Unit/Rumah</label>
+                  <label className="text-[10px] font-bold text-slate-500">Nomor Rumah</label>
                   <input
-                    type="text" required placeholder="Contoh: 100"
-                    value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    type="text"
+                    placeholder="Contoh: 12"
+                    value={propForm.unitNumber}
+                    onChange={(e) => setPropForm({ ...propForm, unitNumber: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                    required
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-400 ml-1">Email (Login)</label>
-                <input
-                  type="email" required placeholder="email@warga.com"
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Luas Tanah (LT)</label>
+                  <input
+                    type="number"
+                    placeholder="90"
+                    value={propForm.surfaceArea}
+                    onChange={(e) => setPropForm({ ...propForm, surfaceArea: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Luas Bangunan (LB)</label>
+                  <input
+                    type="number"
+                    placeholder="60"
+                    value={propForm.buildingArea}
+                    onChange={(e) => setPropForm({ ...propForm, buildingArea: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-400 ml-1">No. WhatsApp</label>
-                <input
-                  type="text" placeholder="0812..."
-                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Status Kepemilikan</label>
+                  <select
+                    value={propForm.status}
+                    onChange={(e) => setPropForm({ ...propForm, status: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                  >
+                    <option value="Milik Pribadi (Tetap)">Milik Pribadi (Tetap)</option>
+                    <option value="Sewa / Kontrak">Sewa / Kontrak</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Daya Listrik</label>
+                  <select
+                    value={propForm.electricity}
+                    onChange={(e) => setPropForm({ ...propForm, electricity: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                  >
+                    <option value="1.300 VA">1.300 VA</option>
+                    <option value="2.200 VA">2.200 VA</option>
+                    <option value="3.500 VA">3.500 VA</option>
+                  </select>
+                </div>
               </div>
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Batal</button>
-                <button type="submit" disabled={isSubmitting} className="flex-[2] py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 disabled:opacity-50">
-                  {isSubmitting ? "Menyimpan..." : "Simpan Data Warga"}
-                </button>
-              </div>
+
+              <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition">
+                + Daftarkan Unit Properti
+              </button>
             </form>
+
+            {/* DAFTAR UNIT TERDAFTAR */}
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700">Daftar Unit Milik Warga Ini:</div>
+              {residentProperties.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">Belum ada unit properti tercatat khusus di database.</div>
+              ) : (
+                residentProperties.map((p) => (
+                  <div key={p.id} className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900">Blok {p.block} No. {p.unit_number}</span>
+                      <div className="text-[10px] text-slate-500">LT: {p.surface_area} m² | LB: {p.building_area} m² | {p.electricity}</div>
+                    </div>
+                    <button onClick={() => handleDeleteProperty(p.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL KELOLA KENDARAAN WARGA (ADMIN)                     */}
+      {/* ======================================================== */}
+      {activeModal === "vehicle" && selectedResident && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <div>
+                <h3 className="font-bold text-base text-slate-800">Izin Kendaraan: {selectedResident.name}</h3>
+                <p className="text-xs text-slate-500">Kelola nomor plat mobil/motor yang berhak melewati gerbang</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+            </div>
+
+            {/* FORM INPUT KENDARAAN */}
+            <form onSubmit={handleSaveVehicle} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div className="text-xs font-bold text-slate-700">+ Daftarkan Kendaraan Baru</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Jenis Kendaraan</label>
+                  <select
+                    value={vehForm.type}
+                    onChange={(e) => setVehForm({ ...vehForm, type: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl font-bold"
+                  >
+                    <option value="Mobil">🚗 Mobil</option>
+                    <option value="Motor">🛵 Motor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Plat Nomor (Huruf & Angka)</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: B 1234 CD"
+                    value={vehForm.plate}
+                    onChange={(e) => setVehForm({ ...vehForm, plate: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl uppercase font-mono font-bold"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Merk / Tipe</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Avanza / Vario"
+                    value={vehForm.brand}
+                    onChange={(e) => setVehForm({ ...vehForm, brand: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500">Warna Kendaraan</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Hitam Metalik"
+                    value={vehForm.color}
+                    onChange={(e) => setVehForm({ ...vehForm, color: e.target.value })}
+                    className="w-full text-xs p-2.5 bg-white border rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition">
+                + Simpan Kendaraan
+              </button>
+            </form>
+
+            {/* DAFTAR KENDARAAN TERDAFTAR */}
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700">Kendaraan Terverifikasi:</div>
+              {residentVehicles.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">Belum ada plat nomor yang terdaftar atas warga ini.</div>
+              ) : (
+                residentVehicles.map((v) => (
+                  <div key={v.id} className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">{v.type === "Mobil" ? "🚗" : "🛵"}</span>
+                      <div>
+                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{v.plate}</span>
+                        <div className="text-[10px] text-slate-500">{v.brand} ({v.color})</div>
+                      </div>
+                    </div>
+                    <button onClick={() => handleDeleteVehicle(v.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

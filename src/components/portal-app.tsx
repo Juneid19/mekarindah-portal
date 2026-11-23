@@ -83,7 +83,7 @@ const [iplData, setIplData] = useState([]);
     transactions: [],
   });
 
-  // ==========================================
+   // ==========================================
   // EFEK LOAD DATA DARI DATABASE (NEON)
   // ==========================================
 
@@ -122,17 +122,43 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-  // 2. Load Data Kendaraan
+  // 2. Load Data Kendaraan (Sinkron dengan Admin)
   useEffect(() => {
-    fetch("/api/vehicles")
+    const targetId = profile?.id || initialUser?.id || "res-warga-1";
+    fetch(`/api/admin/vehicles?residentId=${targetId}`)
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setVehicles(data);
+      .then((resJson) => {
+        if (resJson.data && Array.isArray(resJson.data) && resJson.data.length > 0) {
+          setVehicles(resJson.data);
         }
       })
       .catch((err) => console.warn("Load kendaraan warning:", err));
-  }, []);
+  }, [profile?.id, initialUser?.id]);
+
+  // 3. Load Data Properti / LT / LB (Sinkron dengan Admin)
+  useEffect(() => {
+    const targetId = profile?.id || initialUser?.id || "res-warga-1";
+    fetch(`/api/admin/properties?residentId=${targetId}`)
+      .then((res) => res.json())
+      .then((resJson) => {
+        if (resJson.data && Array.isArray(resJson.data) && resJson.data.length > 0) {
+          setDaftarProperti(
+            resJson.data.map((p: any) => ({
+              id: p.id,
+              blok: p.block,
+              nomor: p.unit_number,
+              status: p.status || "Milik Pribadi (Tetap)",
+              penghuni: profile?.name || "Warga",
+              listrik: p.electricity || "2.200 VA",
+              luasTanah: p.surface_area || "90",
+              luasBangunan: p.building_area || "60",
+              ipl: Number(p.ipl_amount) || 150000,
+            }))
+          );
+        }
+      })
+      .catch((err) => console.warn("Load properti warning:", err));
+  }, [profile?.id, profile?.name, initialUser?.id]);
 
   // ==========================================
   // FUNGSI HANDLER KENDARAAN & PROPERTI
