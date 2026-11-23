@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"; // Memastikan data selalu segar, bukan dari cache
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 

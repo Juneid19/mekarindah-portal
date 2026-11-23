@@ -136,34 +136,33 @@ const [iplData, setIplData] = useState([]);
       .catch((err) => console.warn("Gagal load kendaraan:", err));
   }, [profile?.id, initialUser?.id]);
 
-  // 3. Load Data Properti (Sinkron Lengkap dengan ID, Email, & Unit Warga)
+  //   // 3. Load Data Properti (SINKRONISASI REALTIME DENGAN ADMIN)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
-    const targetEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
-    const targetUnit = profile?.unit || initialUser?.unit || "";
 
-    fetch(`/api/admin/properties?residentId=${targetId}&email=${targetEmail}&unit=${targetUnit}`)
+    // Tambahkan cache: "no-store" agar data selalu segar
+    fetch(`/api/admin/properties?residentId=${targetId}&_t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((resJson) => {
-        const list = Array.isArray(resJson) ? resJson : resJson?.data || [];
-        if (list.length > 0) {
-          setDaftarProperti(
-            list.map((p: any) => ({
-              id: p.id,
-              blok: p.block || "A",
-              nomor: p.unit_number || "01",
-              status: p.status || "Milik Pribadi (Tetap)",
-              penghuni: profile?.name || "Warga",
-              listrik: p.electricity || "2.200 VA",
-              luasTanah: p.surface_area || "90",
-              luasBangunan: p.building_area || "60",
-              ipl: Number(p.ipl_amount) || 150000,
-            }))
-          );
-        }
+        const list = resJson.data || [];
+        
+        // PENTING: SELALU UPDATE STATE (Bahkan saat list kosong/terhapus semua)
+        setDaftarProperti(
+          list.map((p: any) => ({
+            id: p.id,
+            blok: p.block || "A",
+            nomor: p.unit_number || "01",
+            status: p.status || "Milik Pribadi (Tetap)",
+            penghuni: profile?.name || "Warga",
+            listrik: p.electricity || "2.200 VA",
+            luasTanah: p.surface_area || "90",
+            luasBangunan: p.building_area || "60",
+            ipl: Number(p.ipl_amount) || 150000,
+          }))
+        );
       })
       .catch((err) => console.warn("Load properti warning:", err));
-  }, [profile?.id, profile?.email, profile?.unit, profile?.name, initialUser?.id, initialUser?.email]);
+  }, [profile?.id, initialUser?.id]);
 
   // ==========================================
   // FUNGSI HANDLER KENDARAAN & PROPERTI
@@ -213,7 +212,7 @@ const [iplData, setIplData] = useState([]);
   };
 
   // State untuk menyimpan daftar properti milik warga
-const [daftarProperti, setDaftarProperti] = useState([
+const [daftarProperti, setDaftarProperti] = useState<any[]>([]);
   {
     id: "prop-1",
     blok: profile.unit?.charAt(0) || "B",
@@ -783,28 +782,37 @@ const handleTambahProperti = (e: React.FormEvent) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-                  {daftarProperti.map((item, idx) => (
-                    <tr key={item.id || idx} className="hover:bg-slate-50/70 transition">
-                      <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
-                      <td className="p-3.5">
-                        <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 text-xs">
-                          Blok {item.blok} No. {item.nomor}
-                        </span>
-                      </td>
-                      <td className="p-3.5 font-medium">{item.status}</td>
-                      <td className="p-3.5 font-mono text-slate-600">{item.luasBangunan} m² / {item.luasTanah} m²</td>
-                      <td className="p-3.5 font-mono">{item.listrik}</td>
-                      <td className="p-3.5 font-bold text-emerald-600">
-                        Rp {item.ipl ? item.ipl.toLocaleString('id-ID') : "150.000"}
-                      </td>
-                      <td className="p-3.5 pr-4 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                          Sah / Terverifikasi
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+  {daftarProperti.length > 0 ? (
+    daftarProperti.map((item, idx) => (
+      <tr key={item.id || idx} className="hover:bg-slate-50/70 transition">
+        <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
+        <td className="p-3.5">
+          <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 text-xs">
+            Blok {item.blok} No. {item.nomor}
+          </span>
+        </td>
+        <td className="p-3.5 font-medium">{item.status}</td>
+        <td className="p-3.5 font-mono text-slate-600">{item.luasBangunan} m² / {item.luasTanah} m²</td>
+        <td className="p-3.5 font-mono">{item.listrik}</td>
+        <td className="p-3.5 font-bold text-emerald-600">
+          Rp {item.ipl ? item.ipl.toLocaleString('id-ID') : "150.000"}
+        </td>
+        <td className="p-3.5 pr-4 text-center">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+            Sah / Terverifikasi
+          </span>
+        </td>
+      </tr>
+    ))
+  ) : (
+    /* TAMPILAN INI MUNCUL JIKA SEMUA UNIT TELAH DIHAPUS OLEH ADMIN */
+    <tr>
+      <td colSpan={7} className="p-8 text-center text-slate-400">
+        Belum ada unit properti yang terdaftar atas nama Anda. Hubungi Pengurus RW untuk pendaftaran unit.
+      </td>
+    </tr>
+  )}
+</tbody>
               </table>
             </div>
           </div>
