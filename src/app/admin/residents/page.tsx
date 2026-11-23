@@ -171,13 +171,32 @@ const handleSaveVehicle = async (e: React.FormEvent) => {
   }
 };
 
-  // 7. Hapus Kendaraan
+    // 7. Hapus Kendaraan (RESPON INSTAN + NOTIFIKASI)
   const handleDeleteVehicle = async (id: string) => {
-    if (!confirm("Hapus data kendaraan ini?")) return;
-    await fetch(`/api/admin/vehicles?id=${id}`, { method: "DELETE" });
-    const resReload = await fetch(`/api/admin/vehicles?residentId=${selectedResident.id}`);
-    const jsonReload = await resReload.json();
-    setResidentVehicles(jsonReload.data || []);
+    if (!id) {
+      alert("ID kendaraan tidak valid!");
+      return;
+    }
+
+    if (!confirm("Apakah Anda yakin ingin menghapus data kendaraan ini?")) return;
+
+    try {
+      const res = await fetch(`/api/admin/vehicles?id=${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        // 1. Langsung hapus dari tampilan layar seketika
+        setResidentVehicles((prev) => prev.filter((item) => item.id !== id));
+        alert("✅ Data kendaraan berhasil dihapus!");
+      } else {
+        alert("Gagal menghapus: " + (json.error || "Terjadi kesalahan di database"));
+      }
+    } catch (err: any) {
+      console.error("Gagal delete kendaraan:", err);
+      alert("Error koneksi: " + err.message);
+    }
   };
 
   // Filter Data
