@@ -136,7 +136,7 @@ export default function AdminResidentsPage() {
     }
   };
 
- // 6. Simpan Kendaraan (VERSI FIX ANTI-TYPO)
+ // 6. Simpan Kendaraan (SAMAKAN DENGAN PROPERTI AGAR SUKSES)
 const handleSaveVehicle = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!selectedResident || !vehForm.plate) return;
@@ -146,14 +146,24 @@ const handleSaveVehicle = async (e: React.FormEvent) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        // Simpan EMAIL sebagai residentId agar warga bisa melihat datanya saat login
-        residentId: selectedResident.email, 
+        // GUNAKAN .id (Bukan .email) agar sama dengan Properti yang sukses
+        residentId: selectedResident.id, 
         ...vehForm,
       }),
     });
 
     if (res.ok) {
       alert("✅ Kendaraan berhasil didaftarkan!");
+      // Refresh list modal
+      const resReload = await fetch(`/api/admin/vehicles?residentId=${selectedResident.id}`);
+      const jsonReload = await resReload.json();
+      setResidentVehicles(jsonReload.data || []);
+      setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
       
       // Refresh list di modal admin
       const resReload = await fetch(`/api/admin/vehicles?email=${selectedResident.email}`);
