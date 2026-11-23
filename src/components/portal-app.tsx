@@ -122,22 +122,28 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-     // 2. Load Data Kendaraan (Sinkronisasi Cerdas dengan Admin)
+       // 2. Load Data Kendaraan (Sinkronisasi Cerdas dengan Admin)
   useEffect(() => {
-    const targetId = profile?.id || initialUser?.id || "res-warga-1";
-    const targetEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
-    const targetUnit = profile?.unit || initialUser?.unit || "";
+    // Ambil identitas warga yang sedang login
+    const userEmail = profile?.email || initialUser?.email;
+    const userId = profile?.id || initialUser?.id;
 
-    fetch(`/api/admin/vehicles?residentId=${targetId}&email=${targetEmail}&unit=${targetUnit}`)
+    // Jika belum login, jangan fetch dulu
+    if (!userEmail && !userId) return;
+
+    // Panggil API dengan parameter email & ID agar database bisa mencocokkan
+    fetch(`/api/admin/vehicles?residentId=${userId}&email=${userEmail}`)
       .then((res) => res.json())
       .then((resJson) => {
-        // Ambil data dari array langsung atau dari .data
-        const list = Array.isArray(resJson) ? resJson : resJson?.data || [];
-        // Selalu update state meskipun list kosong (agar tabel reset jika dihapus admin)
+        // Ambil data dari property .data (karena API kita mengirim { success: true, data: [...] })
+        const list = resJson.data || [];
         setVehicles(list);
       })
-      .catch((err) => console.warn("Gagal sinkron kendaraan:", err));
-  }, [profile?.id, profile?.email, profile?.unit, initialUser?.id]);
+      .catch((err) => {
+        console.warn("Gagal sinkron kendaraan:", err);
+      });
+  }, [profile?.id, profile?.email, initialUser?.id, initialUser?.email]);
+  
   // 3. Load Data Properti (Sinkron Lengkap dengan ID, Email, & Unit Warga)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";

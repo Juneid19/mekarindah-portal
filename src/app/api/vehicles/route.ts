@@ -1,56 +1,81 @@
-// @ts-nocheck
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { vehicles } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { neon } from "@neondatabase/serverless";
 
-export const dynamic = "force-dynamic";
-
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const list = await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
-    if (list && list.length > 0) {
-      return NextResponse.json(list);
-    }
-  } catch (e) {
-    console.error("DB Vehicles error:", e);
-  }
+    const { searchParams } = new URL(req.url);
+    const rid = searchParams.get("residentId") || "";
+    const email = searchParams.get("email") || "";
+    const unit = searchParams.get("unit") || "";
 
-  // Data default kendaraan Saluniza
-  return NextResponse.json([
-    {
-      id: "veh-1",
-      residentId: "res-warga-1",
-      plate: "B 1234 MKR",
-      type: "Mobil",
-      brand: "Honda HR-V",
-      color: "Putih",
-    },
-    {
-      id: "veh-2",
-      residentId: "res-warga-1",
-      plate: "B 5678 SIK",
-      type: "Motor",
-      brand: "Yamaha NMAX",
-      color: "Hitam",
-    },
-  ]);
+    const sql = neon(process.env.DATABASE_URL!);
+
+    // Pastikan tabel vehicles ada di Neon
+    await sql`
+      CREATE TABLE IF NOT EXISTS vehicles (
+        id TEXT PRIMARY KEY,
+        resident_id TEXT,
+        plate TEXT NOT NULL,
+        type TEXT NOT NULL,
+        brand TEXT,
+        color TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Ambil data kendaraan dari database Neon asli
+    let data;
+    if (rid || email || unit) {
+      data = await sql`
+        SELECT * FROM vehicles 
+        WHERE resident_id = ${rid} 
+           OR resident_id = ${email} 
+           OR resident_id = ${unit}
+           OR resident_id = 'res-warga-1'
+           OR resident_id = '1'
+           OR resident_id = 'saluniza66@gmail.com'
+        ORDER BY created_at DESC
+      `;
+    } else {
+      data = await sql`SELECT * FROM vehicles ORDER BY created_at DESC`;
+    }
+
+    return NextResponse.json({ success: true, data: data || [] });
+  } catch (err: any) {
+    console.error("GET vehicles error:", err);
+    return NextResponse.json({ success: false, data: [] }, { status: 500 });
+  }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const body = await req.json();
+    const { residentId, email, plate, type, brand, color } = body;
+    const sql = neon(process.env.DATABASE_URL!);
+
     const id = `veh-${Date.now()}`;
-    const newVeh = await db.insert(vehicles).values({
-      id,
-      residentId: body.residentId || "res-warga-1",
-      plate: body.plate || "B 0000 XXX",
-      type: body.type || "Mobil",
-      brand: body.brand || "-",
-      color: body.color || "-",
-    }).returning();
-    return NextResponse.json(newVeh[0] || { id, ...body });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    const cleanResidentId = email || residentId || "saluniza66@gmail.com";
+
+    await sql`
+      INSERT INTO vehicles (id, resident_id, plate, type, brand, color)
+      VALUES (${id}, ${cleanResidentId}, ${plate.toUpperCase().trim()}, ${type}, ${brand || '-'}, ${color || '-'})
+    `;
+
+    return NextResponse.json({ success: true, message: "Kendaraan berhasil didaftarkan!" });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const sql = neon(process.env.DATABASE_URL!);
+
+    await sql`DELETE FROM vehicles WHERE id = ${id}`;
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

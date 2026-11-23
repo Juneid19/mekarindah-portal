@@ -136,34 +136,36 @@ export default function AdminResidentsPage() {
     }
   };
 
-  // 6. Simpan Kendaraan
-  const handleSaveVehicle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedResident || !vehForm.plate) return;
+  // 6. Simpan Kendaraan (VERSI PERBAIKAN)
+const handleSaveVehicle = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!selectedResident || !vehForm.plate) return;
 
-    try {
-      const res = await fetch("/api/admin/vehicles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          residentId: selectedResident.id,
-          ...vehForm,
-        }),
-      });
+  try {
+    const res = await fetch("/api/admin/vehicles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        residentId: selectedResident.id, // ID Database (misal: 1)
+        email: selectedResident.email,   // Email (misal: saluniza66@gmail.com)
+        ...vehForm,
+      }),
+    });
 
-      if (res.ok) {
-        alert("✅ Kendaraan berhasil didaftarkan!");
-        const resReload = await fetch(`/api/admin/vehicles?residentId=${selectedResident.id}`);
-        const jsonReload = await resReload.json();
-        setResidentVehicles(jsonReload.data || []);
-        setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
-      } else {
-        alert("Gagal mendaftarkan kendaraan");
-      }
-    } catch (err) {
-      console.error(err);
+    if (res.ok) {
+      alert("✅ Kendaraan berhasil didaftarkan!");
+      // Refresh list di modal admin
+      const resReload = await fetch(`/api/admin/vehicles?residentId=${selectedResident.id}&email=${selectedResident.email}`);
+      const jsonReload = await resReload.json();
+      setResidentVehicles(jsonReload.data || []);
+      setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
+    } else {
+      alert("Gagal mendaftarkan kendaraan");
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   // 7. Hapus Kendaraan
   const handleDeleteVehicle = async (id: string) => {
