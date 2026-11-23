@@ -122,24 +122,28 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-    // 2. Load Data Kendaraan (SAMAKAN DENGAN JALUR PROPERTI)
+   // 2. Load Data Kendaraan (WAJIB PAKAI JALUR /api/admin/vehicles)
   useEffect(() => {
+    // Identitas Saluniza
     const userEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
-    const userId = profile?.id || initialUser?.id || "res-warga-1";
+    const userId = profile?.id || initialUser?.id;
 
-    // Panggil /api/admin/vehicles (JANGAN /api/vehicles)
-    fetch(`/api/admin/vehicles?residentId=${userId}&email=${userEmail}`)
+    if (!userEmail) return;
+
+    // GANTI ALAMATNYA KE /api/admin/vehicles
+    fetch(`/api/admin/vehicles?email=${userEmail}&residentId=${userId}`)
       .then((res) => res.json())
       .then((resJson) => {
-        console.log("Data Kendaraan Masuk:", resJson);
+        console.log("Cek Data Kendaraan:", resJson);
+        // Ambil dari .data karena formatnya { success: true, data: [...] }
         const list = resJson.data || [];
         setVehicles(list);
       })
       .catch((err) => {
-        console.error("Gagal load kendaraan:", err);
+        console.error("Error fetch kendaraan:", err);
       });
   }, [profile?.email, profile?.id, initialUser?.email]);
-
+  
   // 3. Load Data Properti (Sinkron Lengkap dengan ID, Email, & Unit Warga)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
