@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PortalApp } from "@/components/portal-app";
+import { PortalApp, VehicleItem, PropertyItem } from "@/components/portal-app";
 import { neon } from "@neondatabase/serverless";
 
 export const dynamic = "force-dynamic";
@@ -17,14 +17,15 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
-  let userVehicles = [];
-  let userProperties = [];
+  // Memberikan tipe data eksplisit agar tidak error saat build
+  let userVehicles: VehicleItem[] = [];
+  let userProperties: PropertyItem[] = [];
 
   try {
     if (process.env.DATABASE_URL) {
       const sql = neon(process.env.DATABASE_URL);
 
-      // Ambil kendaraan milik warga yang sedang login (cocokkan ID, Email, atau fallback)
+      // Ambil kendaraan milik warga yang sedang login
       const rawVehicles = await sql`
         SELECT * FROM vehicles 
         WHERE resident_id = ${user.id?.toString() || ''}
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
         ORDER BY id ASC
       `;
 
-      // Jika tidak ditemukan berdasarkan ID spesifik, ambil semua data kendaraan yang baru diinput admin
+      // Mapping data dengan tipe yang benar
       const vehicleList = rawVehicles.length > 0 
         ? rawVehicles 
         : await sql`SELECT * FROM vehicles ORDER BY id ASC`;
