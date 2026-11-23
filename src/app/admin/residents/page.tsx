@@ -136,49 +136,38 @@ export default function AdminResidentsPage() {
     }
   };
 
- // 6. Simpan Kendaraan (SAMAKAN DENGAN PROPERTI AGAR SUKSES)
+ // 6. Simpan Kendaraan (VERSI FINAL - ANTI ERROR PARSING)
 const handleSaveVehicle = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!selectedResident || !vehForm.plate) return;
 
   try {
     const res = await fetch("/api/admin/vehicles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // GUNAKAN .id (Bukan .email) agar sama dengan Properti yang sukses
-        residentId: selectedResident.id, 
-        ...vehForm,
-      }),
-    });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    residentId: selectedResident.id, // Gunakan ID (res-warga-1)
+    ...vehForm,
+  }),
+});
 
     if (res.ok) {
       alert("✅ Kendaraan berhasil didaftarkan!");
-      // Refresh list modal
+      
+      // Ambil data terbaru untuk update tabel di modal
       const resReload = await fetch(`/api/admin/vehicles?residentId=${selectedResident.id}`);
       const jsonReload = await resReload.json();
-      setResidentVehicles(jsonReload.data || []);
-      setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
       
-      // Refresh list di modal admin
-      const resReload = await fetch(`/api/admin/vehicles?email=${selectedResident.email}`);
-      const jsonReload = await resReload.json();
-      
-      // PERBAIKAN DI SINI (Nama state yang benar)
+      // Update state tabel modal
       setResidentVehicles(jsonReload.data || []);
       
-      // Reset Form
+      // Reset form input
       setVehForm({ plate: "", type: "Mobil", brand: "", color: "" });
     } else {
-      alert("Gagal mendaftarkan kendaraan");
+      alert("Gagal menyimpan ke database");
     }
   } catch (err) {
-    console.error("Error Simpan Kendaraan:", err);
+    console.error("Gagal simpan kendaraan:", err);
   }
 };
 
