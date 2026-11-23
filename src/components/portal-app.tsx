@@ -722,65 +722,67 @@ const handleTambahProperti = (e: React.FormEvent) => {
             </div>
           )}
 
-  {/* ======================================================== */}
-      {/* TAB PROPERTI                                             */}
+        {/* ======================================================== */}
+      {/* TAB PROPERTI (FORMAT TABEL WARGA)                        */}
       {/* ======================================================== */}
       {activeTab === "properti" && (
-        <div className="space-y-4 p-4 max-w-xl mx-auto pb-24">
+        <div className="space-y-4 p-4 max-w-2xl mx-auto pb-24">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Informasi Properti</h2>
-              <p className="text-xs text-slate-500">Unit hunian terdaftar di RW Mekar Indah</p>
+              <h2 className="text-lg font-bold text-slate-800">Daftar Properti & Unit Hunian</h2>
+              <p className="text-xs text-slate-500">Unit sah yang terdaftar atas nama Anda di database pengurus RW</p>
             </div>
-            <button
-              onClick={() => setModalPropertiBuka(true)}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>+</span> Tambah Unit
-            </button>
+            <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full">
+              {daftarProperti.length} Unit
+            </span>
           </div>
 
-          <div className="space-y-3">
-            {daftarProperti.map((item) => (
-              <div key={item.id} className="bg-gradient-to-br from-emerald-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                  <span className="px-2.5 py-1 bg-white/10 text-emerald-300 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10">
-                    Unit Terverifikasi
-                  </span>
-                  <span className="text-xs text-emerald-200 font-medium">RW Mekar Indah</span>
-                </div>
-                
-                <div className="text-2xl font-black mb-1 relative z-10">
-                  Blok {item.blok} No. {item.nomor}
-                </div>
-                <div className="text-xs text-emerald-200 mb-6 relative z-10">
-                  Perumahan Mekar Indah
-                </div>
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3.5 pl-4">No</th>
+                    <th className="p-3.5">Unit / Blok</th>
+                    <th className="p-3.5">Status Hunian</th>
+                    <th className="p-3.5">Luas (LB / LT)</th>
+                    <th className="p-3.5">Daya Listrik</th>
+                    <th className="p-3.5">Iuran IPL</th>
+                    <th className="p-3.5 pr-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                  {daftarProperti.map((item, idx) => (
+                    <tr key={item.id || idx} className="hover:bg-slate-50/70 transition">
+                      <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
+                      <td className="p-3.5">
+                        <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 text-xs">
+                          Blok {item.blok} No. {item.nomor}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-medium">{item.status}</td>
+                      <td className="p-3.5 font-mono text-slate-600">{item.luasBangunan} m² / {item.luasTanah} m²</td>
+                      <td className="p-3.5 font-mono">{item.listrik}</td>
+                      <td className="p-3.5 font-bold text-emerald-600">
+                        Rp {item.ipl ? item.ipl.toLocaleString('id-ID') : "150.000"}
+                      </td>
+                      <td className="p-3.5 pr-4 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          Sah / Terverifikasi
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs relative z-10">
-                  <div>
-                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Status Hunian</div>
-                    <div className="font-bold">{item.status}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Nama Penghuni</div>
-                    <div className="font-bold">{item.penghuni}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Luas Bangunan / Tanah</div>
-                    <div className="font-bold">{item.luasBangunan} m² / {item.luasTanah} m²</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-emerald-300 uppercase font-semibold">Daya Listrik</div>
-                    <div className="font-bold">{item.listrik}</div>
-                  </div>
-                  <div className="col-span-2 pt-2 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-[10px] text-emerald-300 uppercase font-semibold">Iuran IPL Bulanan</span>
-                    <span className="font-bold text-emerald-300">Rp {item.ipl.toLocaleString('id-ID')} / bln</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="bg-blue-50 border border-blue-200/70 p-3.5 rounded-xl flex items-start gap-3">
+            <span className="text-blue-600 text-base">🏠</span>
+            <p className="text-xs text-blue-800 leading-relaxed">
+              <b>Administrasi Properti:</b> Perubahan status sewa/kontrak, balik nama kepemilikan, atau izin renovasi bangunan wajib dilaporkan kepada <b>Pengurus RW</b> atau melalui tab <b>Aduan</b>.
+            </p>
           </div>
         </div>
       )}
@@ -1275,59 +1277,86 @@ const handleTambahProperti = (e: React.FormEvent) => {
           )}
         </main>
 
-        {/* TEMPEL DI BAWAH BLOK TAB LAINNYA */}
+        {/* ======================================================== */}
+{/* TAB KENDARAAN (FORMAT TABEL KHUSUS WARGA)                */}
+{/* ======================================================== */}
 {activeTab === "kendaraan" && (
-  <div className="space-y-4 p-4 max-w-xl mx-auto">
+  <div className="space-y-4 p-4 max-w-2xl mx-auto pb-24">
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-lg font-bold text-slate-800">Kendaraan Terdaftar</h2>
-        <p className="text-xs text-slate-500">Kendaraan yang dikenali di palang gerbang RFID</p>
+        <h2 className="text-lg font-bold text-slate-800">Daftar Kendaraan Terdaftar</h2>
+        <p className="text-xs text-slate-500">Kendaraan resmi penghuni yang terverifikasi di gerbang masuk</p>
       </div>
-      <button
-        onClick={() => setIsAddVehicleOpen(true)}
-        className="inline-flex items-center gap-1 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
-      >
-        <Plus className="w-4 h-4" />
-        Tambah Kendaraan
-      </button>
+      <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full">
+        {vehicles.length} Kendaraan
+      </span>
     </div>
 
-    {/* DAFTAR KENDARAAN */}
-    <div className="space-y-3">
-      {vehicles.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl text-center border border-dashed border-slate-200">
-          <Car className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-xs text-slate-400">Belum ada kendaraan yang didaftarkan.</p>
-          <button
-            onClick={() => setIsAddVehicleOpen(true)}
-            className="mt-3 text-xs font-bold text-emerald-600 hover:underline"
-          >
-            + Daftarkan Mobil / Motor
-          </button>
-        </div>
-      ) : (
-        vehicles.map((v: any, idx: number) => (
-          <div key={v.id || idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                {v.type === "Mobil" ? "🚗" : "🏍️"}
-              </div>
-              <div>
-                <div className="font-mono font-bold text-slate-800 text-sm tracking-wide">
-                  {v.plate}
-                </div>
-                <div className="text-xs text-slate-400">
-                  {v.brand || v.type} • {v.color || "Warna Standar"}
-                </div>
-              </div>
-            </div>
-            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold">
-              Terverifikasi
-            </span>
-          </div>
-        ))
-      )}
+    {/* TABEL DAFTAR KENDARAAN */}
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+            <tr>
+              <th className="p-3.5 pl-4">No</th>
+              <th className="p-3.5">Jenis</th>
+              <th className="p-3.5">Plat Nomor</th>
+              <th className="p-3.5">Merk / Model</th>
+              <th className="p-3.5">Warna</th>
+              <th className="p-3.5 pr-4 text-center">Status Akses</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+            {vehicles.length > 0 ? (
+              vehicles.map((v: any, idx: number) => (
+                <tr key={v.id || idx} className="hover:bg-slate-50/70 transition">
+                  <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
+                  <td className="p-3.5 font-bold">
+                    {v.type === "mobil" || v.type === "Mobil" ? (
+                      <span className="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                        🚗 Mobil
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                        🛵 Motor
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3.5">
+                    <span className="font-mono font-bold bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md text-slate-900 tracking-wider">
+                      {v.plate}
+                    </span>
+                  </td>
+                  <td className="p-3.5">{v.brand || "-"}</td>
+                  <td className="p-3.5 text-slate-500">{v.color || "-"}</td>
+                  <td className="p-3.5 pr-4 text-center">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      ✓ Aktif / Sah
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-slate-400">
+                  Belum ada kendaraan yang terdaftar atas unit Anda. Hubungi Sekretariat RW / Pos Satpam untuk pendaftaran plat nomor.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    {/* KOTAK INFORMASI */}
+    <div className="bg-amber-50 border border-amber-200/70 p-3.5 rounded-xl flex items-start gap-3">
+      <span className="text-amber-600 text-base">ℹ️</span>
+      <p className="text-xs text-amber-800 leading-relaxed">
+        <b>Catatan Satpam / RW:</b> Pendaftaran kendaraan baru atau perubahan nomor plat wajib melampirkan foto STNK ke kantor pengurus RW demi keamanan lingkungan.
+      </p>
+    </div>
+  </div>
+)}
 
     {/* POPUP MODAL TAMBAH */}
     {isAddVehicleOpen && (
@@ -1414,7 +1443,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
       </div>
     )}
   </div>
-)}
+
 
         {/* BOTTOM NAVIGATION KHUSUS HP */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-14 z-30">
@@ -1462,7 +1491,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
             <span className="text-[10px] mt-0.5">Profil</span>
           </button>
         </nav>
-      </div>
+    
 
       {/* MODAL: FORM PERMINTAAN DOKUMEN BARU */}
       {isDocModalOpen && (
@@ -1550,77 +1579,7 @@ const handleTambahProperti = (e: React.FormEvent) => {
         </div>
       )}
 
-         {/* ======================================================== */}
-      {/* MODAL TAMBAH PROPERTI                                    */}
-      {/* ======================================================== */}
-      {modalPropertiBuka && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h3 className="font-bold text-lg text-slate-800">Tambah Unit Properti</h3>
-                <p className="text-xs text-slate-500">Daftarkan kepemilikan unit baru</p>
-              </div>
-              <button onClick={() => setModalPropertiBuka(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">✕</button>
-            </div>
-
-            <form onSubmit={handleTambahProperti} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Blok</label>
-                  <select value={formProperti.blok} onChange={(e) => setFormProperti({ ...formProperti, blok: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold">
-                    {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((b) => <option key={b} value={b}>Blok {b}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">No. Rumah</label>
-                  <input type="text" placeholder="Contoh: 15" value={formProperti.nomor} onChange={(e) => setFormProperti({ ...formProperti, nomor: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Luas Tanah</label>
-                  <div className="relative">
-                    <input type="number" placeholder="90" value={formProperti.luasTanah} onChange={(e) => setFormProperti({ ...formProperti, luasTanah: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
-                    <span className="absolute right-3 top-3 text-[10px] text-slate-400">m²</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Luas Bangunan</label>
-                  <div className="relative">
-                    <input type="number" placeholder="60" value={formProperti.luasBangunan} onChange={(e) => setFormProperti({ ...formProperti, luasBangunan: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" required />
-                    <span className="absolute right-3 top-3 text-[10px] text-slate-400">m²</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
-                <select value={formProperti.status} onChange={(e) => setFormProperti({ ...formProperti, status: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <option value="Milik Pribadi (Tetap)">Milik Pribadi (Tetap)</option>
-                  <option value="Sewa / Kontrak">Sewa / Kontrak</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Daya Listrik</label>
-                <select value={formProperti.listrik} onChange={(e) => setFormProperti({ ...formProperti, listrik: e.target.value })} className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <option value="1.300 VA">1.300 VA</option>
-                  <option value="2.200 VA">2.200 VA</option>
-                  <option value="3.500 VA">3.500 VA</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setModalPropertiBuka(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-md">Simpan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
+        
     </div>
   );
 }
