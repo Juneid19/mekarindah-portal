@@ -122,28 +122,36 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-       // 2. Load Data Kendaraan (Sinkronisasi Cerdas dengan Admin)
+    // 2. Load Data Kendaraan (PERBAIKAN FORMAT DATA)
   useEffect(() => {
-    // Ambil identitas warga yang sedang login
-    const userEmail = profile?.email || initialUser?.email;
+    // 1. Ambil identitas warga
+    const userEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
     const userId = profile?.id || initialUser?.id;
 
-    // Jika belum login, jangan fetch dulu
-    if (!userEmail && !userId) return;
-
-    // Panggil API dengan parameter email & ID agar database bisa mencocokkan
-    fetch(`/api/admin/vehicles?residentId=${userId}&email=${userEmail}`)
+    // 2. Panggil API (Gunakan folder /api/vehicles agar simpel)
+    fetch(`/api/vehicles?email=${userEmail}&residentId=${userId}`)
       .then((res) => res.json())
       .then((resJson) => {
-        // Ambil data dari property .data (karena API kita mengirim { success: true, data: [...] })
-        const list = resJson.data || [];
-        setVehicles(list);
+        console.log("Data Kendaraan dari API:", resJson);
+
+        // PENTING: API kita mengirim { success: true, data: [...] }
+        // Jadi kita harus ambil bagian ".data" nya
+        let listKendaraan = [];
+        
+        if (resJson && resJson.data && Array.isArray(resJson.data)) {
+          listKendaraan = resJson.data;
+        } else if (Array.isArray(resJson)) {
+          listKendaraan = resJson;
+        }
+
+        // Masukkan ke state (Tabel akan otomatis terisi)
+        setVehicles(listKendaraan);
       })
       .catch((err) => {
-        console.warn("Gagal sinkron kendaraan:", err);
+        console.error("Gagal load kendaraan:", err);
       });
-  }, [profile?.id, profile?.email, initialUser?.id, initialUser?.email]);
-  
+  }, [profile?.email, profile?.id, initialUser?.email]);
+
   // 3. Load Data Properti (Sinkron Lengkap dengan ID, Email, & Unit Warga)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
