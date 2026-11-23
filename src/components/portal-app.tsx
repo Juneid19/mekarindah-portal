@@ -136,33 +136,34 @@ const [iplData, setIplData] = useState([]);
       .catch((err) => console.warn("Gagal load kendaraan:", err));
   }, [profile?.id, initialUser?.id]);
 
-  //   // 3. Load Data Properti (SINKRONISASI REALTIME DENGAN ADMIN)
+     // 3. Load Data Properti (Sinkronisasi dari Admin)
   useEffect(() => {
+    // Ambil identitas warga dari profil yang sedang login
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
 
-    // Tambahkan cache: "no-store" agar data selalu segar
-    fetch(`/api/admin/properties?residentId=${targetId}&_t=${Date.now()}`, { cache: "no-store" })
+    fetch(`/api/admin/properties?residentId=${targetId}`)
       .then((res) => res.json())
       .then((resJson) => {
+        // Ambil bagian .data dari hasil fetch
         const list = resJson.data || [];
         
-        // PENTING: SELALU UPDATE STATE (Bahkan saat list kosong/terhapus semua)
+        // Simpan ke state (ini akan otomatis mengisi tabel di layar)
         setDaftarProperti(
           list.map((p: any) => ({
             id: p.id,
             blok: p.block || "A",
             nomor: p.unit_number || "01",
-            status: p.status || "Milik Pribadi (Tetap)",
+            status: p.status || "Milik Pribadi",
             penghuni: profile?.name || "Warga",
             listrik: p.electricity || "2.200 VA",
-            luasTanah: p.surface_area || "90",
-            luasBangunan: p.building_area || "60",
+            luasTanah: p.surface_area || "0",
+            luasBangunan: p.building_area || "0",
             ipl: Number(p.ipl_amount) || 150000,
           }))
         );
       })
-      .catch((err) => console.warn("Load properti warning:", err));
-  }, [profile?.id, initialUser?.id]);
+      .catch((err) => console.warn("Load properti error:", err));
+  }, [profile?.id, profile?.name, initialUser?.id]);
 
   // ==========================================
   // FUNGSI HANDLER KENDARAAN & PROPERTI
@@ -211,18 +212,7 @@ const [iplData, setIplData] = useState([]);
     setIsEditPropertyOpen(false);
   };
 
-  // State untuk menyimpan daftar properti milik warga
 const [daftarProperti, setDaftarProperti] = useState<any[]>([]);
-  {
-    id: "prop-1",
-    blok: profile.unit?.charAt(0) || "B",
-    nomor: profile.unit?.split("-")[1] || profile.unit?.substring(1) || "12",
-    status: "Milik Pribadi (Tetap)",
-    penghuni: profile.name || "Saluniza",
-    listrik: "2.200 VA (Token)",
-    ipl: 150000,
-  }
-]);
 
 const [modalPropertiBuka, setModalPropertiBuka] = useState(false);
 const [formProperti, setFormProperti] = useState({
