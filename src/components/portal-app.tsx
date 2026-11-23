@@ -122,30 +122,18 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-    // 2. Load Data Kendaraan (PERBAIKAN FORMAT DATA)
+    // 2. Load Data Kendaraan (SAMAKAN DENGAN JALUR PROPERTI)
   useEffect(() => {
-    // 1. Ambil identitas warga
     const userEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
-    const userId = profile?.id || initialUser?.id;
+    const userId = profile?.id || initialUser?.id || "res-warga-1";
 
-    // 2. Panggil API (Gunakan folder /api/vehicles agar simpel)
-    fetch(`/api/vehicles?email=${userEmail}&residentId=${userId}`)
+    // Panggil /api/admin/vehicles (JANGAN /api/vehicles)
+    fetch(`/api/admin/vehicles?residentId=${userId}&email=${userEmail}`)
       .then((res) => res.json())
       .then((resJson) => {
-        console.log("Data Kendaraan dari API:", resJson);
-
-        // PENTING: API kita mengirim { success: true, data: [...] }
-        // Jadi kita harus ambil bagian ".data" nya
-        let listKendaraan = [];
-        
-        if (resJson && resJson.data && Array.isArray(resJson.data)) {
-          listKendaraan = resJson.data;
-        } else if (Array.isArray(resJson)) {
-          listKendaraan = resJson;
-        }
-
-        // Masukkan ke state (Tabel akan otomatis terisi)
-        setVehicles(listKendaraan);
+        console.log("Data Kendaraan Masuk:", resJson);
+        const list = resJson.data || [];
+        setVehicles(list);
       })
       .catch((err) => {
         console.error("Gagal load kendaraan:", err);
