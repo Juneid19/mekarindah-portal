@@ -90,8 +90,8 @@ export default function AdminResidentsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          selectedResident.id,
-          ...propForm,
+  residentId: selectedResident.id, 
+  ...propForm,
         }),
       });
 
