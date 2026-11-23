@@ -17,7 +17,9 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
-  // Memberikan tipe data eksplisit agar tidak error saat build
+  // Casting user ke any untuk menghindari error "Property does not exist on SessionUser"
+  const userData = user as any;
+
   let userVehicles: VehicleItem[] = [];
   let userProperties: PropertyItem[] = [];
 
@@ -28,14 +30,13 @@ export default async function DashboardPage() {
       // Ambil kendaraan milik warga yang sedang login
       const rawVehicles = await sql`
         SELECT * FROM vehicles 
-        WHERE resident_id = ${user.id?.toString() || ''}
-           OR resident_id = ${user.email || ''}
+        WHERE resident_id = ${userData.id?.toString() || ''}
+           OR resident_id = ${userData.email || ''}
            OR resident_id = '1'
            OR resident_id = 'res-warga-1'
         ORDER BY id ASC
       `;
 
-      // Mapping data dengan tipe yang benar
       const vehicleList = rawVehicles.length > 0 
         ? rawVehicles 
         : await sql`SELECT * FROM vehicles ORDER BY id ASC`;
@@ -53,8 +54,8 @@ export default async function DashboardPage() {
       // Ambil data properti
       const rawProperties = await sql`
         SELECT * FROM properties 
-        WHERE resident_id = ${user.id?.toString() || ''}
-           OR resident_id = ${user.email || ''}
+        WHERE resident_id = ${userData.id?.toString() || ''}
+           OR resident_id = ${userData.email || ''}
            OR resident_id = '1'
            OR resident_id = 'res-warga-1'
         ORDER BY id ASC
@@ -66,8 +67,8 @@ export default async function DashboardPage() {
 
       userProperties = propList.map((p: any) => ({
         id: p.id,
-        block: p.block || user.block || "B",
-        unit_number: p.unit_number || p.unit || "08",
+        block: p.block || userData.block || "B",
+        unit_number: p.unit_number || p.unit || userData.unit || "08",
         status: p.status || "Dihuni Sendiri",
         surface_area: p.surface_area || 120,
         building_area: p.building_area || 90,
@@ -82,7 +83,7 @@ export default async function DashboardPage() {
 
   return (
     <PortalApp 
-      currentUser={user}
+      currentUser={userData}
       initialVehicles={userVehicles}
       initialProperties={userProperties}
     />
