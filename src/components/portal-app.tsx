@@ -7,7 +7,6 @@ import {
   Car,
   CreditCard,
   AlertTriangle,
-  FileText,
   KeyRound,
   ShieldCheck,
   User,
@@ -18,25 +17,23 @@ import {
   Upload,
   CheckCircle2,
   Clock,
-  XCircle,
   ChevronRight,
   Info,
   Sparkles,
   BadgeCheck,
   Copy,
-  ExternalLink,
   Flame,
   Ambulance,
   ShieldAlert,
   Send,
   X,
-  RefreshCw,
-  Search,
-  MessageSquare
+  LayoutGrid,
+  Table as TableIcon,
+  Bike
 } from "lucide-react";
 
 // Tipe Data
-interface ResidentData {
+export interface ResidentData {
   id: string | number;
   name: string;
   email: string;
@@ -48,7 +45,7 @@ interface ResidentData {
   status_ipl?: "Lunas" | "Belum Bayar" | "Menunggu Verifikasi";
 }
 
-interface PropertyItem {
+export interface PropertyItem {
   id: string | number;
   resident_id?: string | number;
   block: string;
@@ -61,38 +58,24 @@ interface PropertyItem {
   is_verified?: boolean;
 }
 
-interface VehicleItem {
+export interface VehicleItem {
   id: string | number;
   resident_id?: string | number;
   plate: string;
   type: "Mobil" | "Motor" | string;
   brand: string;
   color: string;
+  rfid_tag?: string;
   is_rfid_active?: boolean;
   registered_at?: string;
 }
 
-interface BillItem {
-  id: string;
-  month: string;
-  year: number;
-  amount: number;
-  status: "Lunas" | "Belum Bayar" | "Menunggu Verifikasi";
-  due_date: string;
-}
-
-interface ComplaintItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  status: "Pending" | "Diproses" | "Selesai";
-  date: string;
-}
-
 export function PortalApp() {
   // Tab Aktif
-  const [activeTab, setActiveTab] = useState<"beranda" | "properti" | "kendaraan" | "keuangan" | "tamu" | "aduan" | "surat">("beranda");
+  const [activeTab, setActiveTab] = useState<"beranda" | "properti" | "kendaraan" | "keuangan" | "tamu" | "aduan">("beranda");
+
+  // Mode Tampilan Kendaraan (Card Visual vs Tabel)
+  const [vehicleViewMode, setVehicleViewMode] = useState<"card" | "table">("card");
 
   // State Data Warga
   const [resident, setResident] = useState<ResidentData>({
@@ -107,7 +90,7 @@ export function PortalApp() {
     status_ipl: "Lunas"
   });
 
-  // State Data Properti (Read-Only untuk Warga, dikelola Admin)
+  // Data Properti
   const [properties, setProperties] = useState<PropertyItem[]>([
     {
       id: "prop-1",
@@ -122,14 +105,15 @@ export function PortalApp() {
     }
   ]);
 
-  // State Data Kendaraan (Read-Only untuk Warga, dikelola Admin)
+  // Data Kendaraan (Proporsional & Lengkap)
   const [vehicles, setVehicles] = useState<VehicleItem[]>([
     {
       id: "veh-1",
       plate: "B 1829 SZO",
       type: "Mobil",
-      brand: "Honda HR-V",
+      brand: "Honda HR-V 1.5 RS",
       color: "Putih Mutiara",
+      rfid_tag: "RF-8829-01",
       is_rfid_active: true,
       registered_at: "2024"
     },
@@ -139,27 +123,16 @@ export function PortalApp() {
       type: "Motor",
       brand: "Yamaha NMAX 155",
       color: "Hitam Doff",
+      rfid_tag: "RF-8829-02",
       is_rfid_active: true,
       registered_at: "2024"
     }
   ]);
 
   // State Keuangan
-  const [bills, setBills] = useState<BillItem[]>([
+  const [bills] = useState([
     { id: "bill-1", month: "Maret", year: 2025, amount: 150000, status: "Lunas", due_date: "10 Mar 2025" },
     { id: "bill-2", month: "April", year: 2025, amount: 150000, status: "Belum Bayar", due_date: "10 Apr 2025" }
-  ]);
-
-  // State Aduan
-  const [complaints, setComplaints] = useState<ComplaintItem[]>([
-    {
-      id: "c-1",
-      title: "Lampu Penerangan Jalan Blok B Redup",
-      category: "Fasilitas Umum",
-      description: "Lampu dekat tiang No. 3 Blok B mati total sejak kemarin malam.",
-      status: "Diproses",
-      date: "28 Mar 2025"
-    }
   ]);
 
   // State Modal
@@ -167,10 +140,8 @@ export function PortalApp() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isGuestPassModalOpen, setIsGuestPassModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [isAduanModalOpen, setIsAduanModalOpen] = useState(false);
 
   // Form State
-  const [newComplaint, setNewComplaint] = useState({ title: "", category: "Keamanan", description: "" });
   const [guestName, setGuestName] = useState("");
   const [generatedGuestCode, setGeneratedGuestCode] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState(false);
@@ -181,42 +152,34 @@ export function PortalApp() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch properties
         const propRes = await fetch("/api/properties");
         if (propRes.ok) {
           const propData = await propRes.json();
-          if (Array.isArray(propData) && propData.length > 0) {
-            setProperties(propData);
-          }
+          if (Array.isArray(propData) && propData.length > 0) setProperties(propData);
         }
 
-        // Fetch vehicles
         const vehRes = await fetch("/api/vehicles");
         if (vehRes.ok) {
           const vehData = await vehRes.json();
-          if (Array.isArray(vehData) && vehData.length > 0) {
-            setVehicles(vehData);
-          }
+          if (Array.isArray(vehData) && vehData.length > 0) setVehicles(vehData);
         }
       } catch (err) {
-        console.log("Menggunakan data default portal");
+        console.log("Portal menggunakan data aktif");
       }
     }
     fetchData();
   }, []);
 
-  // Handler Salin Rekening
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(true);
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  // Handler Kirim SOS ke Telegram
   const handleSendSOS = async (type: string) => {
     setSosSending(true);
     try {
-      const message = `🚨 *PANIC BUTTON / SOS MEKAR INDAH* 🚨\n\n👤 *Nama Warga:* ${resident.name}\n🏠 *Unit:* Blok ${resident.block} No. ${resident.unit}\n📞 *No. HP:* ${resident.phone}\n⚠️ *Jenis Darurat:* ${type.toUpperCase()}\n⏰ *Waktu:* ${new Date().toLocaleString("id-ID")}\n\n*Satpam & Tim Siaga Harap Segera Menuju Lokasi!*`;
+      const message = `🚨 *PANIC BUTTON / SOS MEKAR INDAH* 🚨\n\n👤 *Nama Warga:* ${resident.name}\n🏠 *Unit:* Blok ${resident.block} No. ${resident.unit}\n📞 *No. HP:* ${resident.phone}\n⚠️ *Jenis Darurat:* ${type.toUpperCase()}\n⏰ *Waktu:* ${new Date().toLocaleString("id-ID")}\n\n*Petugas Satpam Harap Segera Menuju Lokasi!*`;
 
       await fetch("https://api.telegram.org/bot9027386348:AAESveYphsdbpLtnrew-bddA8BsgHnJJXjY/sendMessage", {
         method: "POST",
@@ -234,73 +197,44 @@ export function PortalApp() {
         setIsSosModalOpen(false);
       }, 3000);
     } catch (e) {
-      alert("Peringatan darurat telah dipicu ke Pos Satpam!");
+      alert("Peringatan darurat telah dikirim ke Pos Keamanan!");
       setIsSosModalOpen(false);
     } finally {
       setSosSending(false);
     }
   };
 
-  // Handler Generate Guest Pass
-  const handleGenerateGuestPass = () => {
-    if (!guestName.trim()) return;
-    const randomCode = "MI-" + Math.floor(100000 + Math.random() * 900000);
-    setGeneratedGuestCode(randomCode);
-  };
-
-  // Handler Submit Aduan
-  const handleSubmitAduan = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComplaint.title || !newComplaint.description) return;
-
-    const newItem: ComplaintItem = {
-      id: "c-" + (complaints.length + 1),
-      title: newComplaint.title,
-      category: newComplaint.category,
-      description: newComplaint.description,
-      status: "Pending",
-      date: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
-    };
-
-    setComplaints([newItem, ...complaints]);
-    setNewComplaint({ title: "", category: "Keamanan", description: "" });
-    setIsAduanModalOpen(false);
-    alert("Aduan berhasil dikirim ke Pengurus RW!");
-  };
-
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans pb-28 md:pb-12">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-28 md:pb-12">
       {/* ========================================================
-          TOP HEADER / APP BAR
+          APP BAR / TOP HEADER
       ======================================================== */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3.5">
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg shadow-emerald-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-slate-950 text-base shadow-lg shadow-emerald-500/20">
               MI
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   Warga Blok {resident.block}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               </div>
-              <h1 className="text-base font-bold text-white leading-tight">Mekar Indah Portal</h1>
+              <h1 className="text-sm sm:text-base font-bold text-white leading-tight">Mekar Indah Portal</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* SOS Panic Button Mini */}
             <button
               onClick={() => setIsSosModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition-transform active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 transition active:scale-95"
             >
               <AlertTriangle className="w-4 h-4 animate-bounce" />
               <span>SOS</span>
             </button>
 
-            {/* Logout/Profile */}
             <a
               href="/login"
               className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition"
@@ -313,56 +247,52 @@ export function PortalApp() {
       </header>
 
       {/* ========================================================
-          MAIN CONTENT CONTAINER
+          MAIN CONTENT
       ======================================================== */}
-      <main className="max-w-4xl mx-auto px-4 py-4 space-y-5">
+      <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
         {/* Profile Card Banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/60 p-4 sm:p-5 shadow-xl">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-850 via-slate-900 to-slate-950 border border-slate-800 p-4 sm:p-5 shadow-xl">
           <div className="flex items-start justify-between relative z-10">
             <div>
-              <p className="text-xs font-medium text-slate-400">Selamat Datang,</p>
+              <p className="text-xs text-slate-400">Selamat Datang,</p>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-1.5 mt-0.5">
                 {resident.name}
-                <BadgeCheck className="w-5 h-5 text-emerald-400 inline shrink-0" />
+                <BadgeCheck className="w-5 h-5 text-emerald-400 shrink-0" />
               </h2>
-              <p className="text-xs text-slate-300 mt-1 flex items-center gap-2">
+              <p className="text-xs text-slate-300 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>Unit: <strong className="text-emerald-400">Blok {resident.block} No. {resident.unit}</strong></span>
                 <span className="text-slate-600">•</span>
-                <span>RFID: <code className="text-xs font-mono text-cyan-300">{resident.rfid_tag}</code></span>
+                <span>RFID Gate: <code className="text-[11px] font-mono text-cyan-300 font-semibold">{resident.rfid_tag}</code></span>
               </p>
             </div>
 
-            {/* Tombol Tampilkan QR Code Gerbang */}
             <button
               onClick={() => setIsQrModalOpen(true)}
-              className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-slate-200 transition active:scale-95 shadow-sm"
+              className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 transition active:scale-95 shrink-0"
             >
-              <QrCode className="w-6 h-6 text-emerald-400" />
-              <span className="text-[10px] font-medium text-slate-300 mt-1">Pass Gate</span>
+              <QrCode className="w-5 h-5 text-emerald-400" />
+              <span className="text-[9px] font-medium text-slate-300 mt-1">Pass Gate</span>
             </button>
           </div>
 
-          {/* Quick Info Badges */}
-          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-750">
-            <div className="bg-slate-800/50 rounded-xl p-2.5 border border-slate-700/40">
-              <span className="text-[11px] text-slate-400 block">Status Iuran IPL (Bulan Ini)</span>
+          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800">
+            <div className="bg-slate-900/70 rounded-xl p-2.5 border border-slate-800">
+              <span className="text-[10px] text-slate-400 block font-medium">Status Iuran IPL</span>
               <span className="text-xs sm:text-sm font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Lunas (Maret 2025)
               </span>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-2.5 border border-slate-700/40">
-              <span className="text-[11px] text-slate-400 block">Kendaraan Terdaftar</span>
+            <div className="bg-slate-900/70 rounded-xl p-2.5 border border-slate-800">
+              <span className="text-[10px] text-slate-400 block font-medium">Akses Kendaraan</span>
               <span className="text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-1 mt-0.5">
-                <Car className="w-3.5 h-3.5" /> {vehicles.length} Unit (Aktif Auto-Gate)
+                <Car className="w-3.5 h-3.5" /> {vehicles.length} Unit Terdaftar
               </span>
             </div>
           </div>
         </div>
 
         {/* ========================================================
-            NAVIGATION TABS (DESKTOP / TOP PILL)
+            NAVIGATION TABS (DESKTOP & TABLET)
         ======================================================== */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs font-semibold">
           {[
@@ -370,8 +300,7 @@ export function PortalApp() {
             { id: "properti", label: "Properti Saya", icon: Building2 },
             { id: "kendaraan", label: "Kendaraan", icon: Car },
             { id: "keuangan", label: "IPL & Kas", icon: CreditCard },
-            { id: "tamu", label: "Akses Tamu", icon: KeyRound },
-            { id: "aduan", label: "Aduan Warga", icon: MessageSquare }
+            { id: "tamu", label: "Akses Tamu", icon: KeyRound }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -382,7 +311,7 @@ export function PortalApp() {
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                   isActive
                     ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
-                    : "bg-slate-800/80 text-slate-300 hover:bg-slate-750 hover:text-white border border-slate-700/50"
+                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-800"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -397,13 +326,12 @@ export function PortalApp() {
         ======================================================== */}
         {activeTab === "beranda" && (
           <div className="space-y-4">
-            {/* Menu Cepat Grid */}
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
               <button
                 onClick={() => setActiveTab("properti")}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:border-emerald-500/50 transition active:scale-95 text-center group"
+                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 transition active:scale-95 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-1.5 group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-1.5">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-200">Properti</span>
@@ -412,31 +340,31 @@ export function PortalApp() {
 
               <button
                 onClick={() => setActiveTab("kendaraan")}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:border-cyan-500/50 transition active:scale-95 text-center group"
+                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition active:scale-95 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-1.5 group-hover:bg-cyan-500 group-hover:text-slate-950 transition">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-1.5">
                   <Car className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-200">Kendaraan</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">{vehicles.length} Terdaftar</span>
+                <span className="text-[10px] text-slate-400 mt-0.5">{vehicles.length} Unit</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("keuangan")}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:border-amber-500/50 transition active:scale-95 text-center group"
+                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition active:scale-95 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-1.5 group-hover:bg-amber-500 group-hover:text-slate-950 transition">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-1.5">
                   <CreditCard className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-semibold text-slate-200">Bayar IPL</span>
+                <span className="text-xs font-semibold text-slate-200">Tagihan IPL</span>
                 <span className="text-[10px] text-emerald-400 mt-0.5">Lunas</span>
               </button>
 
               <button
                 onClick={() => setIsGuestPassModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:border-indigo-500/50 transition active:scale-95 text-center group"
+                className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition active:scale-95 text-center"
               >
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-1.5 group-hover:bg-indigo-500 group-hover:text-slate-950 transition">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-1.5">
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-200">Kode Tamu</span>
@@ -444,136 +372,102 @@ export function PortalApp() {
               </button>
             </div>
 
-            {/* Pengumuman Warga */}
-            <div className="rounded-2xl bg-slate-800/80 border border-slate-700/60 p-4 space-y-3">
+            {/* Pengumuman */}
+            <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
                   <Bell className="w-4 h-4 text-emerald-400" />
-                  Pengumuman & Info RW
+                  Pengumuman Warga RW 08
                 </h3>
-                <span className="text-[11px] text-emerald-400 font-semibold">Terkini</span>
+                <span className="text-[10px] text-emerald-400 font-semibold">Terkini</span>
               </div>
 
-              <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-850 border border-slate-750 text-xs space-y-1">
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="font-semibold text-emerald-400">Kerja Bakti Lingkungan</span>
-                    <span>29 Mar 2025</span>
-                  </div>
-                  <p className="text-slate-200">
-                    Diharapkan partisipasi bapak/ibu warga Blok A - J dalam kegiatan fogging dan pembersihan saluran air.
-                  </p>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-1">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span className="font-bold text-emerald-400">Pemberitahuan Sistem RFID Gate</span>
+                  <span>28 Mar 2025</span>
                 </div>
-
-                <div className="p-3 rounded-xl bg-slate-850 border border-slate-750 text-xs space-y-1">
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="font-semibold text-cyan-400">Pembaruan Sistem Gate RFID</span>
-                    <span>25 Mar 2025</span>
-                  </div>
-                  <p className="text-slate-200">
-                    Bagi warga yang memiliki kendaraan baru, silakan laporkan ke Sekretariat RW / Admin untuk registrasi stiker RFID gate.
-                  </p>
-                </div>
+                <p className="text-slate-300 leading-relaxed">
+                  Pemasangan stiker RFID kendaraan baru dilakukan di Pos Satpam Utama setiap Sabtu-Minggu.
+                </p>
               </div>
-            </div>
-
-            {/* Kontak Darurat Cepat */}
-            <div className="rounded-2xl bg-gradient-to-r from-rose-950/40 to-slate-800 border border-rose-900/40 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Pos Satpam / Keamanan</h4>
-                  <p className="text-[11px] text-slate-400">Siaga 24 Jam Non-Stop</p>
-                </div>
-              </div>
-              <a
-                href="tel:08123456789"
-                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition"
-              >
-                Panggil
-              </a>
             </div>
           </div>
         )}
 
         {/* ========================================================
-            TAB 2: PROPERTI SAYA (MOBILE-FIRST SMART CARDS)
+            TAB 2: PROPERTI SAYA (SMART CARDS PROPORSIONAL)
         ======================================================== */}
         {activeTab === "properti" && (
-          <div className="space-y-4">
-            {/* Header Tab */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-emerald-400" />
-                  Unit Properti Saya
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-emerald-400" />
+                  Data Unit Properti Terdaftar
                 </h3>
-                <p className="text-xs text-slate-400">Data unit terdaftar dan terverifikasi oleh Pengurus RW</p>
+                <p className="text-[11px] text-slate-400">Data resmi terverifikasi dalam database RW Mekar Indah</p>
               </div>
             </div>
 
-            {/* Info Box: Penambahan Data melalui Admin */}
-            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-start gap-2.5 text-xs text-slate-300">
+            {/* Info Warga: Read Only */}
+            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-300">
               <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <span>
-                Data spesifikasi unit properti dikelola oleh Admin RW. Jika terdapat perubahan luas tanah, daya listrik, atau kepemilikan, harap hubungi Pengurus.
+                Data properti dikelola terpusat oleh Admin RW. Hubungi pengurus jika ada perbaikan data luas tanah atau sertifikat.
               </span>
             </div>
 
-            {/* Property Cards List */}
-            <div className="grid grid-cols-1 gap-3">
+            {/* List Property Cards */}
+            <div className="space-y-3">
               {properties.map((prop, idx) => (
                 <div
                   key={prop.id || idx}
-                  className="rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/80 p-4 shadow-lg space-y-3.5 relative overflow-hidden"
+                  className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-lg space-y-3"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                           {prop.status || "Dihuni Sendiri"}
                         </span>
-                        {prop.is_verified !== false && (
-                          <span className="text-[10px] font-semibold text-cyan-400 flex items-center gap-0.5">
-                            <BadgeCheck className="w-3.5 h-3.5" /> Terverifikasi
-                          </span>
-                        )}
+                        <span className="text-[10px] font-semibold text-cyan-400 flex items-center gap-0.5">
+                          <BadgeCheck className="w-3.5 h-3.5" /> Terverifikasi
+                        </span>
                       </div>
-                      <h4 className="text-lg font-bold text-white mt-1.5 tracking-tight">
+                      <h4 className="text-base sm:text-lg font-bold text-white mt-1">
                         Blok {prop.block} — No. {prop.unit_number}
                       </h4>
-                      <p className="text-xs text-slate-400">Perumahan Mekar Indah RW 08</p>
+                      <p className="text-[11px] text-slate-400">Komplek Mekar Indah RW 08</p>
                     </div>
 
-                    <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                      <Building2 className="w-6 h-6" />
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5" />
                     </div>
                   </div>
 
-                  {/* Spesifikasi Grid: Mobile-Friendly 4 Box */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-750">
-                    <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/50">
-                      <span className="text-[10px] text-slate-400 block font-medium">Luas Tanah (LT)</span>
-                      <span className="text-xs sm:text-sm font-bold text-slate-100">{prop.surface_area || 120} m²</span>
+                  {/* 4 Kotak Spesifikasi Proporsional */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800/80">
+                    <div className="bg-slate-950 rounded-xl p-2.5 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Luas Tanah (LT)</span>
+                      <strong className="text-xs sm:text-sm text-slate-100">{prop.surface_area || 120} m²</strong>
                     </div>
 
-                    <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/50">
-                      <span className="text-[10px] text-slate-400 block font-medium">Luas Bangunan (LB)</span>
-                      <span className="text-xs sm:text-sm font-bold text-slate-100">{prop.building_area || 90} m²</span>
+                    <div className="bg-slate-950 rounded-xl p-2.5 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Luas Bangunan (LB)</span>
+                      <strong className="text-xs sm:text-sm text-slate-100">{prop.building_area || 90} m²</strong>
                     </div>
 
-                    <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/50">
-                      <span className="text-[10px] text-slate-400 block font-medium">Daya Listrik</span>
-                      <span className="text-xs sm:text-sm font-bold text-amber-400">{prop.electricity || "2200 VA"}</span>
+                    <div className="bg-slate-950 rounded-xl p-2.5 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Daya Listrik</span>
+                      <strong className="text-xs sm:text-sm text-amber-400">{prop.electricity || "2200 VA"}</strong>
                     </div>
 
-                    <div className="bg-slate-800/80 rounded-xl p-2.5 border border-slate-700/50">
-                      <span className="text-[10px] text-slate-400 block font-medium">Iuran IPL / Bulan</span>
-                      <span className="text-xs sm:text-sm font-bold text-emerald-400">
+                    <div className="bg-slate-950 rounded-xl p-2.5 border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Iuran IPL / Bln</span>
+                      <strong className="text-xs sm:text-sm text-emerald-400">
                         Rp {Number(prop.ipl_amount || 150000).toLocaleString("id-ID")}
-                      </span>
+                      </strong>
                     </div>
                   </div>
                 </div>
@@ -583,70 +477,155 @@ export function PortalApp() {
         )}
 
         {/* ========================================================
-            TAB 3: KENDARAAN (SMART LICENSE PLATE CARDS)
+            TAB 3: KENDARAAN (SMART LICENSE PLATE & PROPORTIONAL)
         ======================================================== */}
         {activeTab === "kendaraan" && (
-          <div className="space-y-4">
-            {/* Header Tab */}
+          <div className="space-y-3">
+            {/* Header & View Switcher */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Car className="w-5 h-5 text-cyan-400" />
-                  Kendaraan Terdaftar
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <Car className="w-4 h-4 text-cyan-400" />
+                  Kendaraan & Akses Gerbang
                 </h3>
-                <p className="text-xs text-slate-400">Akses Gate Masuk Otomatis Komplek Mekar Indah</p>
+                <p className="text-[11px] text-slate-400">Daftar kendaraan resmi yang memiliki stiker RFID Gate</p>
+              </div>
+
+              {/* Toggle Card vs Table */}
+              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
+                <button
+                  onClick={() => setVehicleViewMode("card")}
+                  className={`p-1.5 rounded-lg text-xs transition ${
+                    vehicleViewMode === "card"
+                      ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                  title="Tampilan Kartu Plat"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setVehicleViewMode("table")}
+                  className={`p-1.5 rounded-lg text-xs transition ${
+                    vehicleViewMode === "table"
+                      ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                  title="Tampilan Tabel"
+                >
+                  <TableIcon className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
-            {/* Info Box */}
-            <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-start gap-2.5 text-xs text-slate-300">
+            {/* Info Card Pengurusan Plat */}
+            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-300">
               <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <span>
-                Setiap kendaraan yang terdaftar telah terhubung dengan stiker RFID Gate. Penambahan atau pergantian plat nomor wajib diverifikasi oleh Admin Keamanan.
+                Pendaftaran plat baru atau penggantian stiker RFID dilakukan di Sekretariat RW atau Pos Satpam.
               </span>
             </div>
 
-            {/* Vehicle Cards List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {vehicles.map((veh, idx) => (
-                <div
-                  key={veh.id || idx}
-                  className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/80 p-4 shadow-lg space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                      {veh.type}
-                    </span>
-                    <span className="text-[11px] font-medium text-emerald-400 flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                      Auto-Gate Aktif
-                    </span>
-                  </div>
+            {/* VIEW MODE 1: SMART LICENSE PLATE CARDS (DESAIN OTENTIK) */}
+            {vehicleViewMode === "card" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {vehicles.map((veh, idx) => (
+                  <div
+                    key={veh.id || idx}
+                    className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-lg space-y-3 relative"
+                  >
+                    {/* Header Kartu Kendaraan */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="p-1 rounded-md bg-cyan-500/10 text-cyan-400">
+                          {veh.type?.toLowerCase().includes("motor") ? (
+                            <Bike className="w-4 h-4" />
+                          ) : (
+                            <Car className="w-4 h-4" />
+                          )}
+                        </span>
+                        <span className="text-xs font-bold text-slate-200">{veh.type}</span>
+                      </div>
 
-                  {/* Indonesian Realistic License Plate Style */}
-                  <div className="bg-slate-950 rounded-xl p-3 border-2 border-slate-700 text-center shadow-inner relative">
-                    <span className="text-lg sm:text-xl font-mono font-black tracking-widest text-white block uppercase">
-                      {veh.plate}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-400 tracking-wider block mt-0.5">
-                      MEKAR INDAH • VERIFIED
-                    </span>
-                  </div>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Gate Aktif
+                      </span>
+                    </div>
 
-                  {/* Detail Info Kendaraan */}
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">Merk & Model</span>
-                      <strong className="text-slate-200">{veh.brand}</strong>
+                    {/* PLAT NOMOR INDONESIA REALISTIS (OTENTIK) */}
+                    <div className="bg-zinc-950 rounded-xl p-2.5 border-2 border-zinc-700/80 shadow-inner flex flex-col items-center justify-center">
+                      <div className="border border-zinc-600/40 rounded-lg w-full py-2 px-3 text-center bg-zinc-900/60 shadow-inner">
+                        <span className="text-lg sm:text-xl font-mono font-black tracking-widest text-white block uppercase drop-shadow-sm">
+                          {veh.plate}
+                        </span>
+                        <div className="flex items-center justify-between w-full px-1 mt-1 pt-1 border-t border-zinc-800 text-[9px] font-mono text-zinc-400">
+                          <span>08 • 29</span>
+                          <span className="text-cyan-400 font-semibold tracking-wider">MEKAR INDAH</span>
+                          <span>RW 08</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">Warna</span>
-                      <strong className="text-slate-200">{veh.color}</strong>
+
+                    {/* Detail Spesifikasi Grid Proporsional */}
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-800/80">
+                      <div className="bg-slate-950/80 rounded-lg p-2 border border-slate-850">
+                        <span className="text-[10px] text-slate-400 block font-medium">Merk & Model</span>
+                        <span className="font-bold text-slate-200 text-xs truncate block">{veh.brand}</span>
+                      </div>
+
+                      <div className="bg-slate-950/80 rounded-lg p-2 border border-slate-850">
+                        <span className="text-[10px] text-slate-400 block font-medium">Warna Kendaraan</span>
+                        <span className="font-bold text-slate-200 text-xs truncate block">{veh.color}</span>
+                      </div>
+
+                      <div className="col-span-2 bg-slate-950/80 rounded-lg p-2 border border-slate-850 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 font-medium">ID Tag Stiker RFID</span>
+                        <code className="text-xs font-mono font-bold text-cyan-300">
+                          {veh.rfid_tag || "MI-TAG-" + (idx + 1)}
+                        </code>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {/* VIEW MODE 2: TABEL RINGKAS (DESKTOP & MOBILE COMPACT) */}
+            {vehicleViewMode === "table" && (
+              <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-lg">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-850 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+                      <tr>
+                        <th className="py-3 px-3.5">Plat Nomor</th>
+                        <th className="py-3 px-3.5">Jenis</th>
+                        <th className="py-3 px-3.5">Merk / Model</th>
+                        <th className="py-3 px-3.5">Warna</th>
+                        <th className="py-3 px-3.5">Akses Gate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 text-slate-200">
+                      {vehicles.map((v, i) => (
+                        <tr key={v.id || i} className="hover:bg-slate-850/50">
+                          <td className="py-3 px-3.5 font-mono font-bold text-white tracking-wide">
+                            {v.plate}
+                          </td>
+                          <td className="py-3 px-3.5">{v.type}</td>
+                          <td className="py-3 px-3.5 font-medium">{v.brand}</td>
+                          <td className="py-3 px-3.5">{v.color}</td>
+                          <td className="py-3 px-3.5">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Aktif
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -654,106 +633,98 @@ export function PortalApp() {
             TAB 4: KEUANGAN & IPL
         ======================================================== */}
         {activeTab === "keuangan" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-amber-400" />
-                  Tagihan IPL & Kas RW
-                </h3>
-                <p className="text-xs text-slate-400">Iuran Pengelolaan Lingkungan & Keamanan</p>
-              </div>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-amber-400" />
+                Tagihan IPL & Kas RW
+              </h3>
+              <p className="text-[11px] text-slate-400">Rekening Kas Lingkungan & Keamanan RW 08</p>
             </div>
 
-            {/* Rekening Pembayaran Resmi */}
-            <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700 p-4 space-y-3">
-              <span className="text-xs font-semibold text-slate-300 block">Rekening Resmi RW 08 Mekar Indah</span>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-750 flex items-center justify-between">
+            {/* Rekening Card */}
+            <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 space-y-2.5">
+              <span className="text-xs text-slate-400 block font-medium">Rekening Resmi RW 08 Mekar Indah</span>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400 block">Bank Central Asia (BCA)</span>
+                  <span className="text-[11px] text-slate-400 block">Bank Central Asia (BCA)</span>
                   <span className="text-base font-mono font-bold text-emerald-400 tracking-wider">8820 1928 33</span>
-                  <span className="text-[11px] text-slate-300 block">a.n. KAS RW 08 MEKAR INDAH</span>
+                  <span className="text-[10px] text-slate-300 block">a.n. KAS RW 08 MEKAR INDAH</span>
                 </div>
                 <button
                   onClick={() => copyToClipboard("8820192833")}
                   className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
-                  title="Salin Nomor Rekening"
+                  title="Salin No Rekening"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
               {copiedText && (
-                <p className="text-xs text-emerald-400 font-semibold text-center animate-fade-in">
-                  ✓ Nomor rekening berhasil disalin!
-                </p>
+                <p className="text-xs text-emerald-400 font-semibold text-center">✓ Berhasil disalin!</p>
               )}
             </div>
 
-            {/* Riwayat Tagihan */}
-            <div className="rounded-2xl bg-slate-800/80 border border-slate-700 p-4 space-y-3">
-              <h4 className="text-xs font-bold text-slate-200">Daftar Tagihan IPL 2025</h4>
-              <div className="space-y-2">
-                {bills.map((bill) => (
-                  <div
-                    key={bill.id}
-                    className="p-3 rounded-xl bg-slate-850 border border-slate-750 flex items-center justify-between"
-                  >
-                    <div>
-                      <h5 className="text-xs font-bold text-white">IPL {bill.month} {bill.year}</h5>
-                      <span className="text-[11px] text-slate-400">Jatuh Tempo: {bill.due_date}</span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-slate-200 block">
-                        Rp {bill.amount.toLocaleString("id-ID")}
-                      </span>
-                      {bill.status === "Lunas" ? (
-                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 inline-block mt-0.5">
-                          LUNAS
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => setIsPayModalOpen(true)}
-                          className="text-[10px] font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-2.5 py-1 rounded-lg transition mt-0.5"
-                        >
-                          Bayar
-                        </button>
-                      )}
-                    </div>
+            {/* Tagihan List */}
+            <div className="space-y-2">
+              {bills.map((bill) => (
+                <div
+                  key={bill.id}
+                  className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <h5 className="font-bold text-white">IPL {bill.month} {bill.year}</h5>
+                    <span className="text-[10px] text-slate-400">Jatuh Tempo: {bill.due_date}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right">
+                    <span className="font-bold text-slate-200 block">Rp {bill.amount.toLocaleString("id-ID")}</span>
+                    {bill.status === "Lunas" ? (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block mt-0.5 border border-emerald-500/20">
+                        LUNAS
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setIsPayModalOpen(true)}
+                        className="text-[10px] font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-2.5 py-0.5 rounded-md mt-0.5 transition"
+                      >
+                        Bayar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* ========================================================
-            TAB 5: AKSES TAMU & GUEST PASS
+            TAB 5: AKSES TAMU
         ======================================================== */}
         {activeTab === "tamu" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <KeyRound className="w-5 h-5 text-indigo-400" />
-                  Kode Akses Tamu (Guest Pass)
-                </h3>
-                <p className="text-xs text-slate-400">Buat kode akses gerbang untuk keluarga / kurir / kerabat</p>
-              </div>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-indigo-400" />
+                Akses Tamu (Guest Pass)
+              </h3>
+              <p className="text-[11px] text-slate-400">Buat pass masuk gerbang untuk kurir / kerabat berkunjung</p>
             </div>
 
-            <div className="rounded-2xl bg-slate-800/80 border border-slate-700 p-4 space-y-3">
+            <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3">
               <label className="text-xs font-semibold text-slate-300 block">Nama Tamu / Keterangan</label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Contoh: Kurir Paket / Bpk. Hendra"
+                  placeholder="Contoh: Kurir Paket / Keluarga"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
                 <button
-                  onClick={handleGenerateGuestPass}
+                  onClick={() => {
+                    if (guestName.trim()) {
+                      setGeneratedGuestCode("MI-" + Math.floor(100000 + Math.random() * 900000));
+                    }
+                  }}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition"
                 >
                   Generate
@@ -761,70 +732,21 @@ export function PortalApp() {
               </div>
 
               {generatedGuestCode && (
-                <div className="p-4 rounded-xl bg-slate-900 border border-indigo-500/40 text-center space-y-1.5 mt-3">
-                  <span className="text-[11px] text-slate-400 block">Kode Masuk Gerbang (Berlaku 24 Jam):</span>
-                  <span className="text-2xl font-mono font-black text-indigo-400 tracking-wider block">
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/40 text-center space-y-1 mt-2">
+                  <span className="text-[10px] text-slate-400 block">Kode Masuk Gerbang (24 Jam):</span>
+                  <span className="text-xl font-mono font-black text-indigo-400 tracking-wider block">
                     {generatedGuestCode}
                   </span>
-                  <p className="text-[11px] text-slate-400">
-                    Tunjukkan kode ini ke petugas Satpam di Gerbang Utama Mekar Indah.
-                  </p>
+                  <p className="text-[10px] text-slate-400">Tunjukkan ke Satpam Pos Utama Mekar Indah.</p>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================
-            TAB 6: ADUAN WARGA
-        ======================================================== */}
-        {activeTab === "aduan" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-rose-400" />
-                  Aduan & Laporan Warga
-                </h3>
-                <p className="text-xs text-slate-400">Sampaikan keluhan fasilitas atau keamanan ke Pengurus RW</p>
-              </div>
-
-              <button
-                onClick={() => setIsAduanModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"
-              >
-                + Buat Aduan
-              </button>
-            </div>
-
-            {/* List Aduan */}
-            <div className="space-y-2.5">
-              {complaints.map((c) => (
-                <div key={c.id} className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">{c.title}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      c.status === "Selesai"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                    }`}>
-                      {c.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300">{c.description}</p>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                    <span>Kategori: {c.category}</span>
-                    <span>{c.date}</span>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}
       </main>
 
       {/* ========================================================
-          BOTTOM NAVIGATION (KHUSUS MOBILE)
+          BOTTOM NAVIGATION (KHUSUS HP)
       ======================================================== */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2 md:hidden">
         <div className="max-w-md mx-auto grid grid-cols-5 gap-1">
@@ -833,7 +755,7 @@ export function PortalApp() {
             { id: "properti", label: "Properti", icon: Building2 },
             { id: "kendaraan", label: "Kendaraan", icon: Car },
             { id: "keuangan", label: "IPL", icon: CreditCard },
-            { id: "aduan", label: "Aduan", icon: MessageSquare }
+            { id: "tamu", label: "Tamu", icon: KeyRound }
           ].map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -841,7 +763,7 @@ export function PortalApp() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as any)}
-                className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
                   isActive ? "text-emerald-400 font-bold" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -854,69 +776,62 @@ export function PortalApp() {
       </nav>
 
       {/* ========================================================
-          MODAL 1: SOS PANIC BUTTON
+          MODAL: SOS PANIC BUTTON
       ======================================================== */}
       {isSosModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-slate-900 border border-rose-900/60 rounded-2xl max-w-sm w-full p-5 space-y-4 text-center shadow-2xl">
-            <div className="w-14 h-14 rounded-full bg-rose-600/20 text-rose-500 mx-auto flex items-center justify-center animate-pulse">
-              <ShieldAlert className="w-8 h-8" />
+            <div className="w-12 h-12 rounded-full bg-rose-600/20 text-rose-500 mx-auto flex items-center justify-center animate-pulse">
+              <ShieldAlert className="w-7 h-7" />
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-white">PANGGILAN DARURAT (SOS)</h3>
-              <p className="text-xs text-slate-300 mt-1">
-                Pilih jenis darurat. Alarm & notifikasi instan akan dikirimkan ke Pos Keamanan & Telegram Satpam.
+              <h3 className="text-base font-bold text-white">PANIC BUTTON (SOS)</h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Kirim sinyal darurat langsung ke Pos Keamanan & Telegram Satpam.
               </p>
             </div>
 
             {sosSent ? (
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-bold">
-                ✓ Peringatan Terkirim! Petugas Sedang Menuju Lokasi Anda.
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+                ✓ Peringatan Terkirim! Petugas Sedang Menuju Lokasi.
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 text-xs font-bold">
                 <button
                   disabled={sosSending}
-                  onClick={() => handleSendSOS("Kejahatan / Maling")}
-                  className="p-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex flex-col items-center gap-1.5 transition"
+                  onClick={() => handleSendSOS("Kejahatan")}
+                  className="p-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white flex flex-col items-center gap-1"
                 >
-                  <ShieldAlert className="w-5 h-5" />
-                  Kejahatan
+                  <ShieldAlert className="w-4 h-4" /> Kejahatan
                 </button>
-
                 <button
                   disabled={sosSending}
                   onClick={() => handleSendSOS("Kebakaran")}
-                  className="p-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white flex flex-col items-center gap-1.5 transition"
+                  className="p-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white flex flex-col items-center gap-1"
                 >
-                  <Flame className="w-5 h-5" />
-                  Kebakaran
+                  <Flame className="w-4 h-4" /> Kebakaran
                 </button>
-
                 <button
                   disabled={sosSending}
-                  onClick={() => handleSendSOS("Medis / Ambulans")}
-                  className="p-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex flex-col items-center gap-1.5 transition"
+                  onClick={() => handleSendSOS("Medis")}
+                  className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex flex-col items-center gap-1"
                 >
-                  <Ambulance className="w-5 h-5" />
-                  Medis
+                  <Ambulance className="w-4 h-4" /> Medis
                 </button>
-
                 <button
                   disabled={sosSending}
-                  onClick={() => handleSendSOS("Bencana / Gangguan")}
-                  className="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex flex-col items-center gap-1.5 transition"
+                  onClick={() => handleSendSOS("Bencana")}
+                  className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex flex-col items-center gap-1"
                 >
-                  <AlertTriangle className="w-5 h-5" />
-                  Bencana
+                  <AlertTriangle className="w-4 h-4" /> Bencana
                 </button>
               </div>
             )}
 
             <button
               onClick={() => setIsSosModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs transition"
+              className="w-full py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
             >
               Tutup
             </button>
@@ -925,11 +840,11 @@ export function PortalApp() {
       )}
 
       {/* ========================================================
-          MODAL 2: QR CODE DIGITAL GATE
+          MODAL: QR PASS GERBANG
       ======================================================== */}
       {isQrModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xs w-full p-5 space-y-4 text-center shadow-2xl">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xs w-full p-4 space-y-3 text-center shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-400">Pass Gerbang Otomatis</span>
               <button onClick={() => setIsQrModalOpen(false)} className="text-slate-400 hover:text-white">
@@ -937,24 +852,20 @@ export function PortalApp() {
               </button>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl flex items-center justify-center shadow-inner">
-              {/* QR Code Placeholder Graphic */}
-              <div className="w-44 h-44 bg-slate-950 rounded-xl flex flex-col items-center justify-center p-2 text-center text-white">
-                <QrCode className="w-28 h-28 text-white" />
-                <span className="text-[10px] font-mono text-emerald-400 mt-1 font-bold">
+            <div className="p-3 bg-white rounded-xl flex items-center justify-center">
+              <div className="w-40 h-40 bg-slate-950 rounded-lg flex flex-col items-center justify-center p-2 text-white">
+                <QrCode className="w-24 h-24 text-white" />
+                <span className="text-[9px] font-mono text-emerald-400 mt-1 font-bold">
                   {resident.block}-{resident.unit} • MI-PASS
                 </span>
               </div>
             </div>
 
-            <div>
-              <p className="text-xs font-bold text-white">{resident.name}</p>
-              <p className="text-[11px] text-slate-400">Scan QR Code ini pada scanner Gerbang Utama Mekar Indah.</p>
-            </div>
+            <p className="text-xs text-slate-300">Scan QR Code ini pada scanner Gerbang Utama Mekar Indah.</p>
 
             <button
               onClick={() => setIsQrModalOpen(false)}
-              className="w-full py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold hover:bg-slate-700"
+              className="w-full py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold"
             >
               Tutup
             </button>
@@ -963,110 +874,35 @@ export function PortalApp() {
       )}
 
       {/* ========================================================
-          MODAL 3: BUAT ADUAN WARGA
-      ======================================================== */}
-      {isAduanModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Kirim Aduan Warga</h3>
-              <button onClick={() => setIsAduanModalOpen(false)} className="text-slate-400 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitAduan} className="space-y-3 text-xs">
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Judul Laporan</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: Pohon rimbun dekat tiang listrik"
-                  value={newComplaint.title}
-                  onChange={(e) => setNewComplaint({ ...newComplaint, title: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Kategori</label>
-                <select
-                  value={newComplaint.category}
-                  onChange={(e) => setNewComplaint({ ...newComplaint, category: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="Keamanan">Keamanan & Ketertiban</option>
-                  <option value="Kebersihan">Kebersihan & Sampah</option>
-                  <option value="Fasilitas Umum">Fasilitas Umum / Lampu Jalan</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Deskripsi Lengkap</label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="Jelaskan detail lokasi dan kendala..."
-                  value={newComplaint.description}
-                  onChange={(e) => setNewComplaint({ ...newComplaint, description: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500 resize-none"
-                ></textarea>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAduanModalOpen(false)}
-                  className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-semibold"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400"
-                >
-                  Kirim Aduan
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          MODAL 4: BAYAR IPL
+          MODAL: BAYAR IPL
       ======================================================== */}
       {isPayModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xs w-full p-4 space-y-3 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Konfirmasi Pembayaran IPL</h3>
+              <h3 className="text-xs font-bold text-white">Konfirmasi Pembayaran IPL</h3>
               <button onClick={() => setIsPayModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
-              <span className="text-slate-400 block">Transfer ke BCA Kas RW:</span>
-              <p className="font-mono font-bold text-emerald-400 text-sm">8820 1928 33</p>
-              <p className="text-slate-300">Nominal: <strong>Rp 150.000</strong></p>
+            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+              <span className="text-slate-400 block text-[10px]">Transfer ke Rekening BCA:</span>
+              <p className="font-mono font-bold text-emerald-400">8820 1928 33</p>
+              <p className="text-slate-200 mt-0.5">Nominal: <strong>Rp 150.000</strong></p>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <label className="text-slate-300 font-semibold block">Upload Bukti Transfer</label>
-              <div className="border-2 border-dashed border-slate-700 rounded-xl p-4 text-center cursor-pointer hover:border-emerald-500 transition">
-                <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
-                <span className="text-slate-300 block text-[11px]">Pilih foto struk / tangkapan layar</span>
-              </div>
+            <div className="border border-dashed border-slate-700 rounded-xl p-3 text-center cursor-pointer hover:border-emerald-500 transition">
+              <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+              <span className="text-[11px] text-slate-300 block">Pilih foto bukti transfer</span>
             </div>
 
             <button
               onClick={() => {
-                alert("Bukti pembayaran berhasil diunggah! Menunggu konfirmasi bendahara.");
+                alert("Bukti pembayaran berhasil diunggah!");
                 setIsPayModalOpen(false);
               }}
-              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"
+              className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"
             >
               Kirim Bukti Pembayaran
             </button>
@@ -1076,4 +912,5 @@ export function PortalApp() {
     </div>
   );
 }
+
 export default PortalApp;
