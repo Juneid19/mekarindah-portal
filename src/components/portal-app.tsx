@@ -122,28 +122,35 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-  // 2. Load Data Kendaraan (Sinkron dengan Admin)
+    // 2. Load Data Kendaraan (Sinkron Otomatis dari Admin)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
-    fetch(`/api/admin/vehicles?residentId=${targetId}`)
+    const targetUnit = profile?.unit || initialUser?.unit || "";
+
+    fetch(`/api/admin/vehicles?residentId=${targetId}&unit=${targetUnit}`)
       .then((res) => res.json())
       .then((resJson) => {
-        if (resJson.data && Array.isArray(resJson.data) && resJson.data.length > 0) {
-          setVehicles(resJson.data);
+        // Ambil array baik langsung atau dari properti .data
+        const list = Array.isArray(resJson) ? resJson : resJson?.data || [];
+        if (list.length > 0) {
+          setVehicles(list);
         }
       })
       .catch((err) => console.warn("Load kendaraan warning:", err));
-  }, [profile?.id, initialUser?.id]);
+  }, [profile?.id, profile?.unit, initialUser?.id]);
 
-  // 3. Load Data Properti / LT / LB (Sinkron dengan Admin)
+  // 3. Load Data Properti (Sinkron Otomatis dari Admin)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
-    fetch(`/api/admin/properties?residentId=${targetId}`)
+    const targetUnit = profile?.unit || initialUser?.unit || "";
+
+    fetch(`/api/admin/properties?residentId=${targetId}&unit=${targetUnit}`)
       .then((res) => res.json())
       .then((resJson) => {
-        if (resJson.data && Array.isArray(resJson.data) && resJson.data.length > 0) {
+        const list = Array.isArray(resJson) ? resJson : resJson?.data || [];
+        if (list.length > 0) {
           setDaftarProperti(
-            resJson.data.map((p: any) => ({
+            list.map((p: any) => ({
               id: p.id,
               blok: p.block,
               nomor: p.unit_number,
@@ -158,8 +165,7 @@ const [iplData, setIplData] = useState([]);
         }
       })
       .catch((err) => console.warn("Load properti warning:", err));
-  }, [profile?.id, profile?.name, initialUser?.id]);
-
+  }, [profile?.id, profile?.unit, profile?.name, initialUser?.id]);
   // ==========================================
   // FUNGSI HANDLER KENDARAAN & PROPERTI
   // ==========================================
