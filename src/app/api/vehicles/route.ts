@@ -1,97 +1,64 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { getCurrentUser } from "@/lib/auth";
 
-// Fungsi penjamin kolom database (SAMA SEPERTI PROPERTIES)
-async function setupVehiclesTable(sql: any) {
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ error: "Database URL missing" }, { status: 500 });
+    }
+
+    const sql = neon(process.env.DATABASE_URL);
+    const user = await getCurrentUser();
+
+    // Pastikan tabel vehicles ada
     await sql`
       CREATE TABLE IF NOT EXISTS vehicles (
-        id TEXT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         resident_id TEXT,
         plate TEXT,
         type TEXT DEFAULT 'Mobil',
-        brand TEXT DEFAULT '-',
-        color TEXT DEFAULT '-',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        brand TEXT,
+        color TEXT,
+        rfid_tag TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `;
-    // Tambahkan kolom jika belum ada di tabel lama
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS resident_id TEXT;`;
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS plate TEXT;`;
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS type TEXT;`;
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS brand TEXT;`;
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS color TEXT;`;
-    await sql`ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`;
-  } catch (e) {
-    // Lewatkan jika kolom sudah ada
-  }
-}
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const rid = searchParams.get("residentId") || "";
-    const email = searchParams.get("email") || "";
-    const sql = neon(process.env.DATABASE_URL!);
+    const { searchParams } = new URL(request.url);
+    const reqResidentId = searchParams.get("resident_id") || user?.id?.toString();
+    const reqEmail = searchParams.get("email") || user?.email;
 
-    await setupVehiclesTable(sql);
-
-    // Cari berdasarkan ID "res-warga-1", Email, atau fallback
-    const data = await sql`
+    let rows = await sql`
       SELECT * FROM vehicles 
-      WHERE resident_id = ${rid} 
-         OR resident_id = ${email}
+      WHERE resident_id = ${reqResidentId || ''} 
+         OR resident_id = ${reqEmail || ''}
+         OR resident_id = '1'
          OR resident_id = 'res-warga-1'
-         OR resident_id = 'saluniza66@gmail.com'
-      ORDER BY id DESC
+      ORDER BY id ASC
     `;
 
-    return NextResponse.json({ success: true, data: data || [] });
-  } catch (err: any) {
-    console.error("GET Vehicles Error:", err);
-    return NextResponse.json({ success: false, error: err.message, data: [] }, { status: 500 });
-  }
-}
+    // Fallback: Jika ID spesifik tidak cocok, ambil semua kendaraan
+    if (!rows || rows.length === 0) {
+      rows = await sql`SELECT * FROM vehicles ORDER BY id ASC`;
+    }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { residentId, email, plate, type, brand, color } = body;
-    const sql = neon(process.env.DATABASE_URL!);
+    const formatted = rows.map((v: any) => ({
+      id: v.id,
+      resident_id: v.resident_id,
+      plate: v.plate || v.plate_number || "B 0000 XXX",
+      type: v.type || "Mobil",
+      brand: v.brand || v.model || "-",
+      color: v.color || "-",
+      rfid_tag: v.rfid_tag || `MI-TAG-${v.id}`,
+      is_rfid_active: true
+    }));
 
-    await setupVehiclesTable(sql);
-
-    const id = `veh-${Date.now()}`;
-    // Simpan "res-warga-1" (sama seperti yang dipakai Properties!)
-    const targetId = residentId || "res-warga-1";
-
-    await sql`
-      INSERT INTO vehicles (id, resident_id, plate, type, brand, color)
-      VALUES (
-        ${id}, 
-        ${targetId}, 
-        ${(plate || '').toUpperCase().trim()}, 
-        ${type || 'Mobil'}, 
-        ${brand || '-'}, 
-        ${color || '-'}
-      )
-    `;
-
-    return NextResponse.json({ success: true, message: "Kendaraan berhasil disimpan!" });
-  } catch (err: any) {
-    console.error("POST Vehicles Error:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    const sql = neon(process.env.DATABASE_URL!);
-    await sql`DELETE FROM vehicles WHERE id = ${id}`;
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(formatted);
+  } catch (error: any) {
+    console.error("GET /api/vehicles error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

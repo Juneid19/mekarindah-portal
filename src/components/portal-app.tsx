@@ -8,41 +8,33 @@ import {
   CreditCard,
   AlertTriangle,
   KeyRound,
-  ShieldCheck,
-  User,
   LogOut,
   QrCode,
   Bell,
   Phone,
   Upload,
   CheckCircle2,
-  Clock,
-  ChevronRight,
   Info,
-  Sparkles,
   BadgeCheck,
   Copy,
   Flame,
   Ambulance,
   ShieldAlert,
-  Send,
   X,
   LayoutGrid,
   Table as TableIcon,
   Bike
 } from "lucide-react";
 
-// Tipe Data
 export interface ResidentData {
   id: string | number;
   name: string;
   email: string;
-  phone: string;
-  block: string;
-  unit: string;
-  role: string;
+  phone?: string;
+  block?: string;
+  unit?: string;
+  role?: string;
   rfid_tag?: string;
-  status_ipl?: "Lunas" | "Belum Bayar" | "Menunggu Verifikasi";
 }
 
 export interface PropertyItem {
@@ -50,11 +42,11 @@ export interface PropertyItem {
   resident_id?: string | number;
   block: string;
   unit_number: string;
-  status: string; // Dihuni Sendiri, Disewakan, Kosong
-  surface_area: number | string; // Luas Tanah (m²)
-  building_area: number | string; // Luas Bangunan (m²)
-  electricity: string; // misal: 2200 VA
-  ipl_amount: number | string; // Besaran IPL
+  status: string;
+  surface_area: number | string;
+  building_area: number | string;
+  electricity: string;
+  ipl_amount: number | string;
   is_verified?: boolean;
 }
 
@@ -62,80 +54,75 @@ export interface VehicleItem {
   id: string | number;
   resident_id?: string | number;
   plate: string;
-  type: "Mobil" | "Motor" | string;
+  type: string;
   brand: string;
   color: string;
   rfid_tag?: string;
   is_rfid_active?: boolean;
-  registered_at?: string;
 }
 
-export function PortalApp() {
-  // Tab Aktif
-  const [activeTab, setActiveTab] = useState<"beranda" | "properti" | "kendaraan" | "keuangan" | "tamu" | "aduan">("beranda");
+interface PortalAppProps {
+  currentUser?: any;
+  initialVehicles?: VehicleItem[];
+  initialProperties?: PropertyItem[];
+}
 
-  // Mode Tampilan Kendaraan (Card Visual vs Tabel)
+export function PortalApp({
+  currentUser,
+  initialVehicles = [],
+  initialProperties = []
+}: PortalAppProps) {
+  // Tab Navigasi Aktif
+  const [activeTab, setActiveTab] = useState<"beranda" | "properti" | "kendaraan" | "keuangan" | "tamu">("beranda");
+
+  // Mode Tampilan Kendaraan: Kartu Plat Realistis vs Tabel
   const [vehicleViewMode, setVehicleViewMode] = useState<"card" | "table">("card");
 
-  // State Data Warga
-  const [resident, setResident] = useState<ResidentData>({
-    id: "1",
-    name: "Saluniza",
-    email: "saluniza66@gmail.com",
-    phone: "0812-3456-7890",
-    block: "B",
-    unit: "B-08",
-    role: "Warga Tetap",
-    rfid_tag: "RFID-MI-8821",
-    status_ipl: "Lunas"
+  // Data Profil Warga (dari Session / Login)
+  const [resident] = useState<ResidentData>({
+    id: currentUser?.id || "1",
+    name: currentUser?.name || "Saluniza",
+    email: currentUser?.email || "saluniza66@gmail.com",
+    phone: currentUser?.phone || "0812-3456-7890",
+    block: currentUser?.block || "B",
+    unit: currentUser?.unit || "08",
+    rfid_tag: currentUser?.rfid_tag || "RFID-MI-8821"
   });
 
-  // Data Properti
-  const [properties, setProperties] = useState<PropertyItem[]>([
-    {
-      id: "prop-1",
-      block: "B",
-      unit_number: "08",
-      status: "Dihuni Sendiri",
-      surface_area: 120,
-      building_area: 90,
-      electricity: "2200 VA",
-      ipl_amount: 150000,
-      is_verified: true
+  // State Properti & Kendaraan (Menggunakan data riil dari Neon DB)
+  const [properties, setProperties] = useState<PropertyItem[]>(initialProperties);
+  const [vehicles, setVehicles] = useState<VehicleItem[]>(initialVehicles);
+
+  // Sinkronisasi data dari API jika props awal kosong
+  useEffect(() => {
+    async function syncData() {
+      try {
+        const vehRes = await fetch("/api/vehicles");
+        if (vehRes.ok) {
+          const vehData = await vehRes.json();
+          if (Array.isArray(vehData) && vehData.length > 0) {
+            setVehicles(vehData);
+          }
+        }
+
+        const propRes = await fetch("/api/properties");
+        if (propRes.ok) {
+          const propData = await propRes.json();
+          if (Array.isArray(propData) && propData.length > 0) {
+            setProperties(propData);
+          }
+        }
+      } catch (err) {
+        console.error("Sinkronisasi latar belakang gagal", err);
+      }
     }
-  ]);
 
-  // Data Kendaraan (Proporsional & Lengkap)
-  const [vehicles, setVehicles] = useState<VehicleItem[]>([
-    {
-      id: "veh-1",
-      plate: "B 1829 SZO",
-      type: "Mobil",
-      brand: "Honda HR-V 1.5 RS",
-      color: "Putih Mutiara",
-      rfid_tag: "RF-8829-01",
-      is_rfid_active: true,
-      registered_at: "2024"
-    },
-    {
-      id: "veh-2",
-      plate: "B 4921 BNA",
-      type: "Motor",
-      brand: "Yamaha NMAX 155",
-      color: "Hitam Doff",
-      rfid_tag: "RF-8829-02",
-      is_rfid_active: true,
-      registered_at: "2024"
+    if (vehicles.length === 0) {
+      syncData();
     }
-  ]);
+  }, [vehicles.length]);
 
-  // State Keuangan
-  const [bills] = useState([
-    { id: "bill-1", month: "Maret", year: 2025, amount: 150000, status: "Lunas", due_date: "10 Mar 2025" },
-    { id: "bill-2", month: "April", year: 2025, amount: 150000, status: "Belum Bayar", due_date: "10 Apr 2025" }
-  ]);
-
-  // State Modal
+  // Modal State
   const [isSosModalOpen, setIsSosModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isGuestPassModalOpen, setIsGuestPassModalOpen] = useState(false);
@@ -148,28 +135,6 @@ export function PortalApp() {
   const [sosSending, setSosSending] = useState(false);
   const [sosSent, setSosSent] = useState(false);
 
-  // Ambil Data dari API jika tersedia
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const propRes = await fetch("/api/properties");
-        if (propRes.ok) {
-          const propData = await propRes.json();
-          if (Array.isArray(propData) && propData.length > 0) setProperties(propData);
-        }
-
-        const vehRes = await fetch("/api/vehicles");
-        if (vehRes.ok) {
-          const vehData = await vehRes.json();
-          if (Array.isArray(vehData) && vehData.length > 0) setVehicles(vehData);
-        }
-      } catch (err) {
-        console.log("Portal menggunakan data aktif");
-      }
-    }
-    fetchData();
-  }, []);
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(true);
@@ -179,7 +144,7 @@ export function PortalApp() {
   const handleSendSOS = async (type: string) => {
     setSosSending(true);
     try {
-      const message = `🚨 *PANIC BUTTON / SOS MEKAR INDAH* 🚨\n\n👤 *Nama Warga:* ${resident.name}\n🏠 *Unit:* Blok ${resident.block} No. ${resident.unit}\n📞 *No. HP:* ${resident.phone}\n⚠️ *Jenis Darurat:* ${type.toUpperCase()}\n⏰ *Waktu:* ${new Date().toLocaleString("id-ID")}\n\n*Petugas Satpam Harap Segera Menuju Lokasi!*`;
+      const message = `🚨 *PANIC BUTTON / SOS MEKAR INDAH* 🚨\n\n👤 *Nama Warga:* ${resident.name}\n🏠 *Unit:* Blok ${resident.block} No. ${resident.unit}\n⚠️ *Jenis Darurat:* ${type.toUpperCase()}\n⏰ *Waktu:* ${new Date().toLocaleString("id-ID")}\n\n*Petugas Satpam Harap Segera Menuju Lokasi!*`;
 
       await fetch("https://api.telegram.org/bot9027386348:AAESveYphsdbpLtnrew-bddA8BsgHnJJXjY/sendMessage", {
         method: "POST",
@@ -207,7 +172,7 @@ export function PortalApp() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-28 md:pb-12">
       {/* ========================================================
-          APP BAR / TOP HEADER
+          APP BAR
       ======================================================== */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -250,7 +215,7 @@ export function PortalApp() {
           MAIN CONTENT
       ======================================================== */}
       <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
-        {/* Profile Card Banner */}
+        {/* Banner Profil Warga */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-850 via-slate-900 to-slate-950 border border-slate-800 p-4 sm:p-5 shadow-xl">
           <div className="flex items-start justify-between relative z-10">
             <div>
@@ -285,20 +250,18 @@ export function PortalApp() {
             <div className="bg-slate-900/70 rounded-xl p-2.5 border border-slate-800">
               <span className="text-[10px] text-slate-400 block font-medium">Akses Kendaraan</span>
               <span className="text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-1 mt-0.5">
-                <Car className="w-3.5 h-3.5" /> {vehicles.length} Unit Terdaftar
+                <Car className="w-3.5 h-3.5" /> {vehicles.length} Unit Terverifikasi
               </span>
             </div>
           </div>
         </div>
 
-        {/* ========================================================
-            NAVIGATION TABS (DESKTOP & TABLET)
-        ======================================================== */}
+        {/* Tab Navigasi Atas */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs font-semibold">
           {[
             { id: "beranda", label: "Beranda", icon: Home },
             { id: "properti", label: "Properti Saya", icon: Building2 },
-            { id: "kendaraan", label: "Kendaraan", icon: Car },
+            { id: "kendaraan", label: `Kendaraan (${vehicles.length})`, icon: Car },
             { id: "keuangan", label: "IPL & Kas", icon: CreditCard },
             { id: "tamu", label: "Akses Tamu", icon: KeyRound }
           ].map((tab) => {
@@ -335,7 +298,7 @@ export function PortalApp() {
                   <Building2 className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-200">Properti</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">{properties.length} Unit</span>
+                <span className="text-[10px] text-slate-400 mt-0.5">{properties.length || 1} Unit</span>
               </button>
 
               <button
@@ -346,7 +309,7 @@ export function PortalApp() {
                   <Car className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-slate-200">Kendaraan</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">{vehicles.length} Unit</span>
+                <span className="text-[10px] text-cyan-400 font-bold mt-0.5">{vehicles.length} Terdaftar</span>
               </button>
 
               <button
@@ -372,7 +335,7 @@ export function PortalApp() {
               </button>
             </div>
 
-            {/* Pengumuman */}
+            {/* Pengumuman Warga */}
             <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
@@ -385,10 +348,10 @@ export function PortalApp() {
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="font-bold text-emerald-400">Pemberitahuan Sistem RFID Gate</span>
-                  <span>28 Mar 2025</span>
+                  <span>Mekar Indah</span>
                 </div>
                 <p className="text-slate-300 leading-relaxed">
-                  Pemasangan stiker RFID kendaraan baru dilakukan di Pos Satpam Utama setiap Sabtu-Minggu.
+                  Pendaftaran plat kendaraan dilakukan oleh Sekretariat RW / Admin. Setiap kendaraan terdaftar akan diberikan stiker RFID resmi untuk akses palang otomatis.
                 </p>
               </div>
             </div>
@@ -396,29 +359,23 @@ export function PortalApp() {
         )}
 
         {/* ========================================================
-            TAB 2: PROPERTI SAYA (SMART CARDS PROPORSIONAL)
+            TAB 2: PROPERTI SAYA
         ======================================================== */}
         {activeTab === "properti" && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-emerald-400" />
-                  Data Unit Properti Terdaftar
-                </h3>
-                <p className="text-[11px] text-slate-400">Data resmi terverifikasi dalam database RW Mekar Indah</p>
-              </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-emerald-400" />
+                Data Unit Properti Terdaftar
+              </h3>
+              <p className="text-[11px] text-slate-400">Data resmi spesifikasi rumah dari database RW</p>
             </div>
 
-            {/* Info Warga: Read Only */}
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-300">
               <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-              <span>
-                Data properti dikelola terpusat oleh Admin RW. Hubungi pengurus jika ada perbaikan data luas tanah atau sertifikat.
-              </span>
+              <span>Data spesifikasi unit properti diverifikasi langsung oleh Admin RW.</span>
             </div>
 
-            {/* List Property Cards */}
             <div className="space-y-3">
               {properties.map((prop, idx) => (
                 <div
@@ -477,21 +434,21 @@ export function PortalApp() {
         )}
 
         {/* ========================================================
-            TAB 3: KENDARAAN (SMART LICENSE PLATE & PROPORTIONAL)
+            TAB 3: KENDARAAN (SINKRON PENUH DENGAN ADMIN)
         ======================================================== */}
         {activeTab === "kendaraan" && (
           <div className="space-y-3">
-            {/* Header & View Switcher */}
+            {/* Header & Toggle Card/Table */}
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                   <Car className="w-4 h-4 text-cyan-400" />
-                  Kendaraan & Akses Gerbang
+                  Kendaraan Terverifikasi ({vehicles.length})
                 </h3>
-                <p className="text-[11px] text-slate-400">Daftar kendaraan resmi yang memiliki stiker RFID Gate</p>
+                <p className="text-[11px] text-slate-400">Akses resmi Auto-Gate RW 08 Mekar Indah</p>
               </div>
 
-              {/* Toggle Card vs Table */}
+              {/* Toggle Switcher */}
               <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5">
                 <button
                   onClick={() => setVehicleViewMode("card")}
@@ -518,23 +475,30 @@ export function PortalApp() {
               </div>
             </div>
 
-            {/* Info Card Pengurusan Plat */}
+            {/* Info Tambahan */}
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-300">
               <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <span>
-                Pendaftaran plat baru atau penggantian stiker RFID dilakukan di Sekretariat RW atau Pos Satpam.
+                Seluruh kendaraan di bawah ini telah terdaftar di database Admin dan aktif membuka portal otomatis Komplek Mekar Indah.
               </span>
             </div>
 
-            {/* VIEW MODE 1: SMART LICENSE PLATE CARDS (DESAIN OTENTIK) */}
-            {vehicleViewMode === "card" && (
+            {/* Jika Kendaraan Kosong */}
+            {vehicles.length === 0 && (
+              <div className="p-8 text-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 text-xs">
+                Belum ada kendaraan yang didaftarkan oleh Admin untuk unit Anda.
+              </div>
+            )}
+
+            {/* MODE 1: KARTU PLAT OTENTIK INDONESIA */}
+            {vehicleViewMode === "card" && vehicles.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {vehicles.map((veh, idx) => (
                   <div
                     key={veh.id || idx}
                     className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 shadow-lg space-y-3 relative"
                   >
-                    {/* Header Kartu Kendaraan */}
+                    {/* Header Item */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="p-1 rounded-md bg-cyan-500/10 text-cyan-400">
@@ -544,7 +508,7 @@ export function PortalApp() {
                             <Car className="w-4 h-4" />
                           )}
                         </span>
-                        <span className="text-xs font-bold text-slate-200">{veh.type}</span>
+                        <span className="text-xs font-bold text-slate-200">{veh.type || "Mobil"}</span>
                       </div>
 
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
@@ -553,7 +517,7 @@ export function PortalApp() {
                       </span>
                     </div>
 
-                    {/* PLAT NOMOR INDONESIA REALISTIS (OTENTIK) */}
+                    {/* PLAT NOMOR OTENTIK */}
                     <div className="bg-zinc-950 rounded-xl p-2.5 border-2 border-zinc-700/80 shadow-inner flex flex-col items-center justify-center">
                       <div className="border border-zinc-600/40 rounded-lg w-full py-2 px-3 text-center bg-zinc-900/60 shadow-inner">
                         <span className="text-lg sm:text-xl font-mono font-black tracking-widest text-white block uppercase drop-shadow-sm">
@@ -567,7 +531,7 @@ export function PortalApp() {
                       </div>
                     </div>
 
-                    {/* Detail Spesifikasi Grid Proporsional */}
+                    {/* DETAIL SPESIFIKASI */}
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-800/80">
                       <div className="bg-slate-950/80 rounded-lg p-2 border border-slate-850">
                         <span className="text-[10px] text-slate-400 block font-medium">Merk & Model</span>
@@ -591,8 +555,8 @@ export function PortalApp() {
               </div>
             )}
 
-            {/* VIEW MODE 2: TABEL RINGKAS (DESKTOP & MOBILE COMPACT) */}
-            {vehicleViewMode === "table" && (
+            {/* MODE 2: TABEL RINGKAS */}
+            {vehicleViewMode === "table" && vehicles.length > 0 && (
               <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-lg">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -642,7 +606,6 @@ export function PortalApp() {
               <p className="text-[11px] text-slate-400">Rekening Kas Lingkungan & Keamanan RW 08</p>
             </div>
 
-            {/* Rekening Card */}
             <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-4 space-y-2.5">
               <span className="text-xs text-slate-400 block font-medium">Rekening Resmi RW 08 Mekar Indah</span>
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
@@ -662,36 +625,6 @@ export function PortalApp() {
               {copiedText && (
                 <p className="text-xs text-emerald-400 font-semibold text-center">✓ Berhasil disalin!</p>
               )}
-            </div>
-
-            {/* Tagihan List */}
-            <div className="space-y-2">
-              {bills.map((bill) => (
-                <div
-                  key={bill.id}
-                  className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <h5 className="font-bold text-white">IPL {bill.month} {bill.year}</h5>
-                    <span className="text-[10px] text-slate-400">Jatuh Tempo: {bill.due_date}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-slate-200 block">Rp {bill.amount.toLocaleString("id-ID")}</span>
-                    {bill.status === "Lunas" ? (
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block mt-0.5 border border-emerald-500/20">
-                        LUNAS
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setIsPayModalOpen(true)}
-                        className="text-[10px] font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-2.5 py-0.5 rounded-md mt-0.5 transition"
-                      >
-                        Bayar
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}
@@ -753,7 +686,7 @@ export function PortalApp() {
           {[
             { id: "beranda", label: "Beranda", icon: Home },
             { id: "properti", label: "Properti", icon: Building2 },
-            { id: "kendaraan", label: "Kendaraan", icon: Car },
+            { id: "kendaraan", label: `Mobil (${vehicles.length})`, icon: Car },
             { id: "keuangan", label: "IPL", icon: CreditCard },
             { id: "tamu", label: "Tamu", icon: KeyRound }
           ].map((item) => {
@@ -868,43 +801,6 @@ export function PortalApp() {
               className="w-full py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold"
             >
               Tutup
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          MODAL: BAYAR IPL
-      ======================================================== */}
-      {isPayModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xs w-full p-4 space-y-3 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white">Konfirmasi Pembayaran IPL</h3>
-              <button onClick={() => setIsPayModalOpen(false)} className="text-slate-400 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-              <span className="text-slate-400 block text-[10px]">Transfer ke Rekening BCA:</span>
-              <p className="font-mono font-bold text-emerald-400">8820 1928 33</p>
-              <p className="text-slate-200 mt-0.5">Nominal: <strong>Rp 150.000</strong></p>
-            </div>
-
-            <div className="border border-dashed border-slate-700 rounded-xl p-3 text-center cursor-pointer hover:border-emerald-500 transition">
-              <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-              <span className="text-[11px] text-slate-300 block">Pilih foto bukti transfer</span>
-            </div>
-
-            <button
-              onClick={() => {
-                alert("Bukti pembayaran berhasil diunggah!");
-                setIsPayModalOpen(false);
-              }}
-              className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"
-            >
-              Kirim Bukti Pembayaran
             </button>
           </div>
         </div>
