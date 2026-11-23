@@ -742,75 +742,119 @@ const handleTambahProperti = (e: React.FormEvent) => {
             </div>
           )}
 
-        {/* ======================================================== */}
-      {/* TAB PROPERTI (FORMAT TABEL WARGA)                        */}
+              {/* ======================================================== */}
+      {/* TAB PROPERTI: MODERN RESPONSIVE CARDS (ANTI-TUMPANG TINDIH) */}
       {/* ======================================================== */}
       {activeTab === "properti" && (
-        <div className="space-y-4 p-4 max-w-2xl mx-auto pb-24">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4 p-3 sm:p-4 max-w-xl mx-auto pb-28">
+          {/* Header Info */}
+          <div className="flex items-center justify-between px-1">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Daftar Properti & Unit Hunian</h2>
-              <p className="text-xs text-slate-500">Unit sah yang terdaftar atas nama Anda di database pengurus RW</p>
+              <h2 className="text-base sm:text-lg font-black text-slate-800">Unit Properti Saya</h2>
+              <p className="text-[11px] text-slate-500">Daftar hunian resmi yang terdaftar di RW</p>
             </div>
-            <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full">
+            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-full border border-emerald-200 shadow-xs">
               {daftarProperti.length} Unit
             </span>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3.5 pl-4">No</th>
-                    <th className="p-3.5">Unit / Blok</th>
-                    <th className="p-3.5">Status Hunian</th>
-                    <th className="p-3.5">Luas (LB / LT)</th>
-                    <th className="p-3.5">Daya Listrik</th>
-                    <th className="p-3.5">Iuran IPL</th>
-                    <th className="p-3.5 pr-4 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-  {daftarProperti.length > 0 ? (
-    daftarProperti.map((item, idx) => (
-      <tr key={item.id || idx} className="hover:bg-slate-50/70 transition">
-        <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
-        <td className="p-3.5">
-          <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 text-xs">
-            Blok {item.blok} No. {item.nomor}
-          </span>
-        </td>
-        <td className="p-3.5 font-medium">{item.status}</td>
-        <td className="p-3.5 font-mono text-slate-600">{item.luasBangunan} m² / {item.luasTanah} m²</td>
-        <td className="p-3.5 font-mono">{item.listrik}</td>
-        <td className="p-3.5 font-bold text-emerald-600">
-          Rp {item.ipl ? item.ipl.toLocaleString('id-ID') : "150.000"}
-        </td>
-        <td className="p-3.5 pr-4 text-center">
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-            Sah / Terverifikasi
-          </span>
-        </td>
-      </tr>
-    ))
-  ) : (
-    /* TAMPILAN INI MUNCUL JIKA SEMUA UNIT TELAH DIHAPUS OLEH ADMIN */
-    <tr>
-      <td colSpan={7} className="p-8 text-center text-slate-400">
-        Belum ada unit properti yang terdaftar atas nama Anda. Hubungi Pengurus RW untuk pendaftaran unit.
-      </td>
-    </tr>
-  )}
-</tbody>
-              </table>
-            </div>
-          </div>
+          {/* List Kartu Properti */}
+          {daftarProperti.length > 0 ? (
+            <div className="space-y-3.5">
+              {daftarProperti.map((item, idx) => {
+                // Pembersih nomor unit agar tidak dobel Blok & Nomor
+                const rawNomor = String(item.nomor || "");
+                const nomorBersih = rawNomor.replace(/^(blok\s*|[a-z]-?)/i, "").trim() || rawNomor;
 
-          <div className="bg-blue-50 border border-blue-200/70 p-3.5 rounded-xl flex items-start gap-3">
-            <span className="text-blue-600 text-base">🏠</span>
-            <p className="text-xs text-blue-800 leading-relaxed">
-              <b>Administrasi Properti:</b> Perubahan status sewa/kontrak, balik nama kepemilikan, atau izin renovasi bangunan wajib dilaporkan kepada <b>Pengurus RW</b> atau melalui tab <b>Aduan</b>.
+                return (
+                  <div
+                    key={item.id || idx}
+                    className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all overflow-hidden"
+                  >
+                    {/* Header Kartu Unit */}
+                    <div className="bg-gradient-to-r from-slate-900 to-emerald-950 p-4 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-base">
+                          🏠
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-md tracking-wider uppercase">
+                              Blok {item.blok}
+                            </span>
+                            <span className="text-sm font-black tracking-wide text-white">
+                              No. {nomorBersih}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-emerald-300 font-medium">Perumahan Mekar Indah</span>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full text-[10px] font-bold">
+                        ✓ Terverifikasi
+                      </span>
+                    </div>
+
+                    {/* Rincian Spesifikasi (Grid 2 Kolom Rapi & Lega) */}
+                    <div className="p-3.5 sm:p-4 grid grid-cols-2 gap-2.5 bg-slate-50/50 text-xs">
+                      {/* Status Hunian */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                          Status Hunian
+                        </span>
+                        <span className="font-bold text-slate-800 text-[11px] leading-tight block">
+                          {item.status || "Milik Pribadi"}
+                        </span>
+                      </div>
+
+                      {/* Daya Listrik */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                          Daya Listrik
+                        </span>
+                        <span className="font-bold text-slate-800 text-[11px] leading-tight block">
+                          ⚡ {item.listrik || "2.200 VA"}
+                        </span>
+                      </div>
+
+                      {/* Luas Tanah & Bangunan */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                          Luas (Bangunan / Tanah)
+                        </span>
+                        <span className="font-mono font-bold text-slate-800 text-[11px] leading-tight block">
+                          📐 {item.luasBangunan || 0} m² / {item.luasTanah || 0} m²
+                        </span>
+                      </div>
+
+                      {/* Iuran IPL */}
+                      <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-100 shadow-2xs">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block mb-0.5">
+                          Iuran IPL Bulanan
+                        </span>
+                        <span className="font-extrabold text-emerald-800 text-xs block">
+                          Rp {Number(item.ipl || 150000).toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Tampilan jika belum ada properti */
+            <div className="bg-white p-8 rounded-2xl border border-dashed border-slate-200 text-center">
+              <span className="text-3xl block mb-2">🏘️</span>
+              <p className="text-xs font-bold text-slate-600 mb-1">Belum Ada Unit Properti</p>
+              <p className="text-[11px] text-slate-400">Unit hunian Anda akan didaftarkan oleh Pengurus RW.</p>
+            </div>
+          )}
+
+          {/* Kotak Info RW Bawah */}
+          <div className="bg-blue-50 border border-blue-200/80 p-3 rounded-xl flex items-start gap-2.5 text-blue-900">
+            <span className="text-sm">ℹ️</span>
+            <p className="text-[11px] leading-relaxed">
+              Jika ada perubahan kepemilikan, sewa, atau renovasi luas bangunan, silakan ajukan laporan ke Pengurus RW melalui tab <b>Aduan</b>.
             </p>
           </div>
         </div>
@@ -1306,76 +1350,68 @@ const handleTambahProperti = (e: React.FormEvent) => {
           )}
         </main>
 
-        {/* ======================================================== */}
-{/* TAB KENDARAAN (FORMAT TABEL KHUSUS WARGA)                */}
-{/* ======================================================== */}
-{activeTab === "kendaraan" && (
-  <div className="space-y-4 p-4 max-w-2xl mx-auto pb-24">
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-800">Daftar Kendaraan Terdaftar</h2>
-        <p className="text-xs text-slate-500">Kendaraan resmi penghuni yang terverifikasi di gerbang masuk</p>
-      </div>
-      <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full">
-        {vehicles.length} Kendaraan
-      </span>
-    </div>
+             {/* ======================================================== */}
+      {/* TAB KENDARAAN: MODERN RESPONSIVE CARDS                  */}
+      {/* ======================================================== */}
+      {activeTab === "kendaraan" && (
+        <div className="space-y-4 p-3 sm:p-4 max-w-xl mx-auto pb-28">
+          {/* Header */}
+          <div className="flex items-center justify-between px-1">
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-slate-800">Kendaraan Terdaftar</h2>
+              <p className="text-[11px] text-slate-500">Izin akses gerbang otomatis & stiker perumahan</p>
+            </div>
+            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-full border border-emerald-200">
+              {vehicles.length} Kendaraan
+            </span>
+          </div>
 
-    {/* TABEL DAFTAR KENDARAAN */}
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
-            <tr>
-              <th className="p-3.5 pl-4">No</th>
-              <th className="p-3.5">Jenis</th>
-              <th className="p-3.5">Plat Nomor</th>
-              <th className="p-3.5">Merk / Model</th>
-              <th className="p-3.5">Warna</th>
-              <th className="p-3.5 pr-4 text-center">Status Akses</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
-            {vehicles.length > 0 ? (
-              vehicles.map((v: any, idx: number) => (
-                <tr key={v.id || idx} className="hover:bg-slate-50/70 transition">
-                  <td className="p-3.5 pl-4 text-slate-400 font-bold">{idx + 1}</td>
-                  <td className="p-3.5 font-bold">
-                    {v.type === "mobil" || v.type === "Mobil" ? (
-                      <span className="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                        🚗 Mobil
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                        🛵 Motor
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3.5">
-                    <span className="font-mono font-bold bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md text-slate-900 tracking-wider">
-                      {v.plate}
-                    </span>
-                  </td>
-                  <td className="p-3.5">{v.brand || "-"}</td>
-                  <td className="p-3.5 text-slate-500">{v.color || "-"}</td>
-                  <td className="p-3.5 pr-4 text-center">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                      ✓ Aktif / Sah
-                    </span>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-400">
-                  Belum ada kendaraan yang terdaftar atas unit Anda. Hubungi Sekretariat RW / Pos Satpam untuk pendaftaran plat nomor.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          {/* List Kartu Kendaraan */}
+          {vehicles.length > 0 ? (
+            <div className="space-y-2.5">
+              {vehicles.map((v: any, idx: number) => (
+                <div
+                  key={v.id || idx}
+                  className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-xl shrink-0">
+                      {v.type === "Mobil" || v.type === "mobil" ? "🚗" : "🛵"}
+                    </div>
+                    <div>
+                      {/* Plat Nomor Model Plat Asli */}
+                      <div className="inline-block px-2.5 py-0.5 bg-slate-900 text-white font-mono font-black text-xs rounded-md tracking-wider shadow-2xs">
+                        {v.plate}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium mt-1">
+                        {v.brand && v.brand !== "-" ? v.brand : v.type} • {v.color && v.color !== "-" ? v.color : "Standar"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-lg text-[10px] font-extrabold shrink-0">
+                    ✓ Aktif
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white p-8 rounded-2xl border border-dashed border-slate-200 text-center">
+              <span className="text-3xl block mb-2">🚗</span>
+              <p className="text-xs font-bold text-slate-600 mb-1">Belum Ada Kendaraan Terdaftar</p>
+              <p className="text-[11px] text-slate-400">Hubungi Pengurus RW / Pos Satpam untuk pendaftaran plat nomor kendaraan.</p>
+            </div>
+          )}
+
+          {/* Kotak Catatan */}
+          <div className="bg-amber-50 border border-amber-200/80 p-3 rounded-xl flex items-start gap-2.5 text-amber-900">
+            <span className="text-sm">🛡️</span>
+            <p className="text-[11px] leading-relaxed">
+              Kendaraan yang terdaftar di atas telah tersinkronisasi dengan <b>Palang Otomatis Gerbang Utama</b>.
+            </p>
+          </div>
+        </div>
+      )}
 
     {/* KOTAK INFORMASI */}
     <div className="bg-amber-50 border border-amber-200/70 p-3.5 rounded-xl flex items-start gap-3">
