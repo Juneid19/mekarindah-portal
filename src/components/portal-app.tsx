@@ -122,22 +122,22 @@ const [iplData, setIplData] = useState([]);
     ambilDataKasDanIpl();
   }, [initialUser?.id]);
 
-   // 2. Load Data Kendaraan (Sinkron Lengkap dengan ID & Email Warga)
+     // 2. Load Data Kendaraan (Sinkronisasi Cerdas dengan Admin)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
     const targetEmail = profile?.email || initialUser?.email || "saluniza66@gmail.com";
+    const targetUnit = profile?.unit || initialUser?.unit || "";
 
-    fetch(`/api/admin/vehicles?residentId=${targetId}&email=${targetEmail}`)
+    fetch(`/api/admin/vehicles?residentId=${targetId}&email=${targetEmail}&unit=${targetUnit}`)
       .then((res) => res.json())
       .then((resJson) => {
+        // Ambil data dari array langsung atau dari .data
         const list = Array.isArray(resJson) ? resJson : resJson?.data || [];
-        if (list.length > 0) {
-          setVehicles(list);
-        }
+        // Selalu update state meskipun list kosong (agar tabel reset jika dihapus admin)
+        setVehicles(list);
       })
-      .catch((err) => console.warn("Load kendaraan warning:", err));
-  }, [profile?.id, profile?.email, initialUser?.id, initialUser?.email]);
-
+      .catch((err) => console.warn("Gagal sinkron kendaraan:", err));
+  }, [profile?.id, profile?.email, profile?.unit, initialUser?.id]);
   // 3. Load Data Properti (Sinkron Lengkap dengan ID, Email, & Unit Warga)
   useEffect(() => {
     const targetId = profile?.id || initialUser?.id || "res-warga-1";
@@ -166,7 +166,7 @@ const [iplData, setIplData] = useState([]);
       })
       .catch((err) => console.warn("Load properti warning:", err));
   }, [profile?.id, profile?.email, profile?.unit, profile?.name, initialUser?.id, initialUser?.email]);
-  
+
   // ==========================================
   // FUNGSI HANDLER KENDARAAN & PROPERTI
   // ==========================================
