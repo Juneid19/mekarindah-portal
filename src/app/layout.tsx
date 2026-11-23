@@ -1,9 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
+// Konfigurasi Metadata SEO
 export const metadata: Metadata = {
-  title: "Portal Warga Mekar Indah",
-  description: "Sistem Informasi & Manajemen Lingkungan RW Mekar Indah",
+  title: "Mekar Indah Portal",
+  description: "Sistem Informasi Warga RW 08 Perumahan Mekar Indah",
+  manifest: "/manifest.json",
+};
+
+// Konfigurasi Viewport Mobile-First (Mencegah Zoom Otomatis di HP)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0f172a", // Slate-900 sesuai tema aplikasi
 };
 
 export default function RootLayout({
@@ -13,17 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
+      <body className={`${inter.className} bg-slate-950 text-slate-50 antialiased selection:bg-emerald-500/30`}>
         {children}
       </body>
     </html>
   );
 }
-import type { Metadata, Viewport } from "next";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // Mencegah layar goyang / zoom tak beraturan di HP
-};
