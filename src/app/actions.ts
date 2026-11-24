@@ -6,7 +6,7 @@ const TELEGRAM_BOT_TOKEN = '9027386348:AAESveYphsdbpLtnrew-bddA8BsgHnJJXjY';
 const TELEGRAM_GROUP_ID = '-1004379863895'; // Ke Grup RW
 
 // 👇 MASUKKAN ID TELEGRAM PRIBADI MAS BRO / SATPAM DI SINI (Contoh: '123456789'):
-const TELEGRAM_PERSONAL_ID = ''; 
+const TELEGRAM_PERSONAL_ID = '74687917'; 
 
 export async function submitPaymentProof(data: {
   residentId: string;
