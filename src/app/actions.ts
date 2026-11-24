@@ -54,7 +54,8 @@ export async function submitPaymentProof(data: {
 
     // 2. 📸 KIRIM FOTO RESI + BUNYI DERING KENCANG KE TELEGRAM
     try {
-      const captionText = 
+            const captionText = 
+        `🚨 <b>PANGGILAN NOTIFIKASI SATPAM / PENGURUS</b>\n` +
         `💸 <b>KONFIRMASI BAYAR IPL MASUK</b>\n\n` +
         `👤 <b>Warga:</b> ${residentName || 'Saluniza'}\n` +
         `🏠 <b>Unit:</b> ${unitNumber || 'Blok A No. 08'}\n` +
@@ -62,7 +63,8 @@ export async function submitPaymentProof(data: {
         `💰 <b>Nominal:</b> Rp ${(amount || 150000).toLocaleString('id-ID')}\n` +
         `💳 <b>Metode:</b> ${paymentMethod || 'Transfer BCA'}\n` +
         `🕒 <b>Waktu:</b> ${new Date().toLocaleString('id-ID')}\n\n` +
-        `<i>Bukti transfer di atas siap diverifikasi pengurus RW via Portal Admin.</i>`;
+        `Perhatian: @username_satpam mohon dicek segera!`; 
+        // 👆 Ganti @username_satpam dengan username Telegram satpam/admin Anda
 
       // Konversi Base64 ke Binary Blob
       const cleanBase64 = proofImageBase64.replace(/^data:image\/\w+;base64,/, '');
