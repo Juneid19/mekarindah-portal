@@ -4,20 +4,16 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Konfigurasi Metadata SEO
-export const metadata: Metadata = {
-  title: "Mekar Indah Portal",
-  description: "Sistem Informasi Warga RW 08 Perumahan Mekar Indah",
-  manifest: "/manifest.json",
-};
-
-// Konfigurasi Viewport Mobile-First (Mencegah Zoom Otomatis di HP)
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#0f172a", // Slate-900 sesuai tema aplikasi
+};
+
+export const metadata: Metadata = {
+  title: "Perumahan Mekar Indah - Portal Warga & Pengurus",
+  description: "Sistem Manajemen Kawasan & Layanan Digital Warga Perumahan Mekar Indah",
 };
 
 export default function RootLayout({
@@ -26,8 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body className={`${inter.className} bg-slate-950 text-slate-50 antialiased selection:bg-emerald-500/30`}>
+    <html lang="id" suppressHydrationWarning>
+      <body
+        className={`${inter.className} bg-slate-950 text-slate-100 antialiased min-h-screen selection:bg-emerald-500 selection:text-slate-950`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

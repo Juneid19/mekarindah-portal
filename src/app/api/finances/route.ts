@@ -1,47 +1,37 @@
 import { NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
 
 export const dynamic = "force-dynamic";
 
-let kasData = [
-  { id: "1", type: "income", category: "IPL", amount: 4500000, description: "Kas Masuk", date: "01/10/2024" },
-];
-
 export async function GET() {
-  const income = kasData.filter(t => t.type === "income").reduce((a, b) => a + b.amount, 0);
-  const expense = kasData.filter(t => t.type === "expense").reduce((a, b) => a + b.amount, 0);
-  return NextResponse.json({
-    balance: income - expense,
-    totalIncome: income,
-    totalExpense: expense,
-    transactions: kasData,
-  });
-}
-
-export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const newTx = {
-      id: `tx-${Date.now()}`,
-      type: body.type || "expense",
-      category: body.category || "Lain-lain",
-      amount: parseInt(body.amount) || 0,
-      description: body.description || "-",
-      date: new Date().toLocaleDateString("id-ID"),
-    };
-    kasData = [newTx, ...kasData];
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ message: "Error" }, { status: 500 });
-  }
-}
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ error: "DATABASE_URL tidak disetel" }, { status: 500 });
+    }
 
-export async function DELETE(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (id) kasData = kasData.filter((t) => t.id !== id);
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ message: "Error" }, { status: 500 });
+    const sql = neon(process.env.DATABASE_URL);
+
+    // Pastikan tabel finance_records tersedia
+    await sql`
+      CREATE TABLE IF NOT EXISTS finance_records (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL, -- 'income' atau 'expense'
+        category TEXT,
+        amount NUMERIC NOT NULL,
+        description TEXT,
+        date DATE DEFAULT CURRENT_DATE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `;
+
+    const records = await sql`
+      SELECT * FROM finance_records 
+      ORDER BY date DESC, id DESC
+    `;
+
+    return NextResponse.json(records);
+  } catch (error: any) {
+    console.error("GET /api/finance error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
