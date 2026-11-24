@@ -3,12 +3,10 @@
 import { Pool } from '@neondatabase/serverless';
 
 const TELEGRAM_BOT_TOKEN = '9027386348:AAESveYphsdbpLtnrew-bddA8BsgHnJJXjY';
+const TELEGRAM_GROUP_ID = '-1004379863895'; // Ke Grup RW
 
-// 1. ID Grup RW Mekar Indah
-const TELEGRAM_CHAT_ID = '-1004379863895';
-
-// 2. (OPSIONAL) ID Chat Pribadi Satpam/Admin (Ganti dengan ID akun Satpam jika ingin japri langsung berdering kencang)
-// const SATPAM_PERSONAL_CHAT_ID = '123456789'; 
+// 👇 MASUKKAN ID TELEGRAM PRIBADI MAS BRO / SATPAM DI SINI (Contoh: '123456789'):
+const TELEGRAM_PERSONAL_ID = ''; 
 
 export async function submitPaymentProof(data: {
   residentId: string;
@@ -31,7 +29,7 @@ export async function submitPaymentProof(data: {
       return { success: false, error: 'DATABASE_URL tidak ditemukan di .env' };
     }
 
-    // 1. Simpan ke database Neon
+    // 1. Simpan ke database Neon PostgreSQL
     const pool = new Pool({ connectionString: dbUrl });
     const client = await pool.connect();
     let paymentId;
@@ -57,7 +55,7 @@ export async function submitPaymentProof(data: {
       client.release();
     }
 
-    // 2. 📸 KIRIM KE TELEGRAM (DENGAN SUARA PENUH TANPA PARAMETER SILENT)
+    // 2. 📸 KIRIM FOTO KE GRUP & JAPRI (DIJAMIN DERING KENCANG)
     try {
       const captionText = 
         `🚨 <b>NOTIFIKASI IPL MASUK</b> 🚨\n\n` +
@@ -71,32 +69,29 @@ export async function submitPaymentProof(data: {
 
       const cleanBase64 = proofImageBase64.replace(/^data:image\/\w+;base64,/, '');
       const imageBuffer = Buffer.from(cleanBase64, 'base64');
-      const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
 
-      // Siapkan FormData
-      const formData = new FormData();
-      formData.append('chat_id', TELEGRAM_CHAT_ID);
-      formData.append('photo', imageBlob, 'bukti_transfer.jpg');
-      formData.append('caption', captionText);
-      formData.append('parse_mode', 'HTML');
-      // ⚠️ CATATAN: disable_notification SENGAJA DIHAPUS agar Telegram memakai default: BERSUARA
+      // Fungsi bantuan kirim foto
+      const sendPhotoToTarget = async (targetChatId: string) => {
+        const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+        const formData = new FormData();
+        formData.append('chat_id', targetChatId);
+        formData.append('photo', imageBlob, 'bukti_transfer.jpg');
+        formData.append('caption', captionText);
+        formData.append('parse_mode', 'HTML');
 
-      const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      // Cadangan teks biasa (jika foto gagal)
-      if (!tgRes.ok) {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: captionText,
-            parse_mode: 'HTML',
-          }),
+          body: formData,
         });
+      };
+
+      // 1. Kirim ke Grup RW (Untuk Arsip)
+      await sendPhotoToTarget(TELEGRAM_GROUP_ID);
+
+      // 2. Kirim Japri ke Akun Pribadi Satpam (Untuk Bunyi Dering Keras)
+      if (TELEGRAM_PERSONAL_ID) {
+        // Catatan: Pastikan akun pribadi sudah pernah klik "Start" di bot @MekarindahsosBOT
+        await sendPhotoToTarget(TELEGRAM_PERSONAL_ID);
       }
 
     } catch (tgErr) {
